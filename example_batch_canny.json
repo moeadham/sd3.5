@@ -9,7 +9,8 @@
         "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
         "output": "outputs/batch/photo_canny_low50_high150_seed51564.png",
         "control_strength": 0.85,
-        "seed": 51564
+        "seed": 51564,
+        "text_encoder_device": "cuda"
     },
     {
         "prompt": "studio ghibli style",
@@ -21,7 +22,8 @@
         "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
         "output": "outputs/batch/photo_canny_low100_high200_seed51564.png",
         "control_strength": 0.85,
-        "seed": 51564
+        "seed": 51564,
+        "text_encoder_device": "cuda"
     },
     {
         "prompt": "studio ghibli style",
@@ -33,7 +35,7 @@
         "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
         "output": "outputs/batch/photo_canny_low150_high250_seed51564.png",
         "control_strength": 0.85,
-        "seed": 51564
-
+        "seed": 51564,
+        "text_encoder_device": "cuda"
     }
 ]
