@@ -153,6 +153,40 @@ logger.info(f"Total import time: {time.time() - import_start:.2f}s")
 ### Image preprocessing functions
 #################################################################################################
 
+def calculate_optimal_dimensions(input_width, input_height, base_resolution=1024, min_size=512, max_size=4096):
+    """
+    Calculate optimal dimensions for SD3 that maintain aspect ratio.
+    All dimensions must be divisible by 64.
+    """
+    # Check if input dimensions are already valid (divisible by 64 and within bounds)
+    if (input_width % 64 == 0 and input_height % 64 == 0 and 
+        min_size <= input_width <= max_size and min_size <= input_height <= max_size):
+        # Input dimensions are already good, use them directly
+        return input_width, input_height
+    
+    aspect_ratio = input_width / input_height
+    
+    # For common HD resolutions, try to preserve them if possible
+    if input_width == 1920 and input_height == 1080:
+        return 1920, 1088  # 1088 is closest to 1080 and divisible by 64
+    elif input_width == 1080 and input_height == 1920:
+        return 1088, 1920
+    
+    # Otherwise, scale to base resolution
+    if aspect_ratio > 1:  # Landscape
+        width = base_resolution
+        height = int(round(width / aspect_ratio / 64) * 64)
+    else:  # Portrait or square
+        height = base_resolution
+        width = int(round(height * aspect_ratio / 64) * 64)
+    
+    # Ensure dimensions are within bounds
+    width = max(min_size, min(max_size, width))
+    height = max(min_size, min(max_size, height))
+    
+    return width, height
+
+
 def preprocess_canny(img, canny_low_threshold=100, canny_high_threshold=200):
     """Convert PIL image to Canny edge detection.
     
@@ -857,7 +891,35 @@ class SD3Inferencer:
         controlnet_type: int = 0,
     ) -> torch.Tensor:
         image_data = Image.open(image)
-        image_data = image_data.resize((width, height), Image.LANCZOS)
+        
+        # Resize while maintaining aspect ratio, then center crop
+        orig_width, orig_height = image_data.size
+        aspect_ratio = orig_width / orig_height
+        target_aspect = width / height
+        
+        # Log if aspect ratios don't match
+        if abs(aspect_ratio - target_aspect) > 0.01:
+            logger.info(f"  Control image aspect ratio {orig_width}x{orig_height} ({aspect_ratio:.2f}) differs from target {width}x{height} ({target_aspect:.2f}), will scale and crop")
+        
+        if aspect_ratio > target_aspect:
+            # Image is wider than target - scale by height and crop width
+            new_height = height
+            new_width = int(height * aspect_ratio)
+            image_data = image_data.resize((new_width, new_height), Image.LANCZOS)
+            # Center crop the width
+            left = (new_width - width) // 2
+            image_data = image_data.crop((left, 0, left + width, height))
+            logger.info(f"  Scaled to {new_width}x{new_height} and cropped width to {width}x{height}")
+        else:
+            # Image is taller than target - scale by width and crop height
+            new_width = width
+            new_height = int(width / aspect_ratio)
+            image_data = image_data.resize((new_width, new_height), Image.LANCZOS)
+            # Center crop the height
+            top = (new_height - height) // 2
+            image_data = image_data.crop((0, top, width, top + height))
+            logger.info(f"  Scaled to {new_width}x{new_height} and cropped height to {width}x{height}")
+        
         latent = self.vae_encode(image_data, using_2b_controlnet, controlnet_type)
         latent = SD3LatentFormat().process_in(latent)
         return latent
@@ -1002,6 +1064,12 @@ class SD3Inferencer:
             # Load raw image
             raw_img = Image.open(raw_image_input).convert("RGB")
             
+            # If width/height not specified, calculate from input image aspect ratio
+            if config.get('width') is None or config.get('height') is None:
+                input_width, input_height = raw_img.size
+                width, height = calculate_optimal_dimensions(input_width, input_height)
+                logger.info(f"  Auto-calculated dimensions from input {input_width}x{input_height} -> {width}x{height}")
+            
             # Apply preprocessing
             if preprocess_type == 'canny':
                 processed_img = preprocess_canny(raw_img, canny_low_threshold, canny_high_threshold)
@@ -1063,6 +1131,14 @@ class SD3Inferencer:
         if controlnet_cond_image:
             control_start = time.time()
             logger.info(f"  Loading controlnet condition: {controlnet_cond_image}")
+            
+            # If width/height not specified and we have a control image, use its aspect ratio
+            if config.get('width') is None or config.get('height') is None:
+                control_img = Image.open(controlnet_cond_image)
+                input_width, input_height = control_img.size
+                width, height = calculate_optimal_dimensions(input_width, input_height)
+                logger.info(f"  Auto-calculated dimensions from control image {input_width}x{input_height} -> {width}x{height}")
+            
             using_2b, control_type = False, 0
             if self.sd3.model.control_model is not None:
                 using_2b = not self.sd3.using_8b_controlnet
