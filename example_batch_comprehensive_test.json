@@ -49,6 +49,7 @@
     "output_image": "outputs/test04_dpmpp_2m_cfg9_canny70-140.png",
     "prompt": "studio ghibli style",
     "negative_prompt": "blurry, low quality, incomplete",
+    "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
     "preprocess": "canny",
     "canny_low": 70,
     "canny_high": 140,
