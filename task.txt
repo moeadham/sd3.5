@@ -1,0 +1,9 @@
+okay, now it is time for you to use your expertise in diffusion models and machine learning. 
+  structure/sd3.5/inputs/compare/sd_output_0.85_seed_51564.png is the output from the stable diffusion API when using 
+  structure/sd3.5/inputs/image.jpg as the input. It uses the same prompt and negative prompt from structure/sd3.5/example_batch_canny.json 
+  and structure/sd3.5/example_batch_depth.json. it also uses a control strenght of 0.85. The output is excellent. I have also included the 
+  output of both the depth and canny batches in the structure/sd3.5/inputs/compare/ directory. as you can see, our output is meaningfully 
+  worse. please take a deep look at all these images and come up with some ideas on why our output is not as good as the reference from the 
+  stable diffusion api. Think really hard about it, include thoughts on which controlnet they are likely using (depth or canny), which 
+  parameters, if they use euler or something else, etc. everyhing. any values not in the batch json are defaults can could impact the 
+  results.
