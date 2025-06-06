@@ -224,6 +224,16 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     
     # Initialize DepthFM model
     logger.info(f"Loading DepthFM model from {depthfm_model_path}")
+    
+    # Add safe globals for OmegaConf (required for PyTorch 2.6+)
+    import torch.serialization
+    import omegaconf.listconfig
+    import omegaconf.dictconfig
+    torch.serialization.add_safe_globals([
+        omegaconf.listconfig.ListConfig,
+        omegaconf.dictconfig.DictConfig
+    ])
+    
     depthfm_model = DepthFM(ckpt_path=depthfm_model_path)
     depthfm_model.eval()
     
