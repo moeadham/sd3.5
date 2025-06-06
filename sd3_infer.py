@@ -213,11 +213,19 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     logger.info(f"Loading DepthFM model from {depthfm_model_path}")
     
     depthfm_model = DepthFM(ckpt_path=depthfm_model_path)
+    
+    # Move model to GPU if available
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logger.info(f"Moving DepthFM model to {device}")
+    depthfm_model = depthfm_model.to(device)
     depthfm_model.eval()
     
     # Convert PIL to tensor
     img_tensor = F.to_tensor(img).unsqueeze(0)  # Add batch dimension
     c, h, w = img_tensor.shape[1:]
+    
+    # Move input to same device as model
+    img_tensor = img_tensor.to(device)
     
     # Resize to 512x512 for DepthFM
     img_resized = torch.nn.functional.interpolate(img_tensor, (512, 512), mode='bilinear', align_corners=False)
