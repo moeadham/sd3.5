@@ -981,20 +981,44 @@ class SD3Inferencer:
             # Apply preprocessing
             if preprocess_type == 'canny':
                 processed_img = preprocess_canny(raw_img, canny_low_threshold, canny_high_threshold)
-                # Save preprocessed image for reference
-                preprocessed_path = raw_image_input.replace('.', f'_canny.')
-                processed_img.save(preprocessed_path)
-                logger.info(f"  Saved Canny edges to: {preprocessed_path}")
+                # Save preprocessed image to the same directory as output
+                if output_path:
+                    # Get the output directory and filename
+                    output_dir = os.path.dirname(output_path)
+                    output_base = os.path.basename(output_path)
+                    output_name, output_ext = os.path.splitext(output_base)
+                    # Create control image path
+                    control_image_path = os.path.join(output_dir, f"{output_name}_control{output_ext}")
+                else:
+                    # Fallback to original behavior if no output path specified
+                    control_image_path = raw_image_input.replace('.', f'_canny.')
+                # Ensure directory exists
+                if output_path and output_dir:
+                    os.makedirs(output_dir, exist_ok=True)
+                processed_img.save(control_image_path)
+                logger.info(f"  Saved Canny edges to: {control_image_path}")
                 # Use the preprocessed image as controlnet condition
-                controlnet_cond_image = preprocessed_path
+                controlnet_cond_image = control_image_path
             elif preprocess_type == 'depth':
                 processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size)
-                # Save preprocessed image for reference
-                preprocessed_path = raw_image_input.replace('.', f'_depth.')
-                processed_img.save(preprocessed_path)
-                logger.info(f"  Saved depth map to: {preprocessed_path}")
+                # Save preprocessed image to the same directory as output
+                if output_path:
+                    # Get the output directory and filename
+                    output_dir = os.path.dirname(output_path)
+                    output_base = os.path.basename(output_path)
+                    output_name, output_ext = os.path.splitext(output_base)
+                    # Create control image path
+                    control_image_path = os.path.join(output_dir, f"{output_name}_control{output_ext}")
+                else:
+                    # Fallback to original behavior if no output path specified
+                    control_image_path = raw_image_input.replace('.', f'_depth.')
+                # Ensure directory exists
+                if output_path and output_dir:
+                    os.makedirs(output_dir, exist_ok=True)
+                processed_img.save(control_image_path)
+                logger.info(f"  Saved depth map to: {control_image_path}")
                 # Use the preprocessed image as controlnet condition
-                controlnet_cond_image = preprocessed_path
+                controlnet_cond_image = control_image_path
             else:
                 logger.warning(f"  Unknown preprocess_type: {preprocess_type}")
             
@@ -1336,36 +1360,7 @@ def main(
             prompts = [prompt]
     logger.info(f"Prompt preparation in {time.time() - prompt_prep_start:.2f}s")
     
-    # Handle raw image preprocessing in single mode
-    if raw_image_input and preprocess_type:
-        preprocess_start = time.time()
-        logger.info(f"Preprocessing raw image: {raw_image_input} with {preprocess_type}")
-        
-        # Load raw image
-        raw_img = Image.open(raw_image_input).convert("RGB")
-        
-        # Apply preprocessing
-        if preprocess_type == 'canny':
-            processed_img = preprocess_canny(raw_img, canny_low_threshold, canny_high_threshold)
-            # Save preprocessed image for reference
-            preprocessed_path = raw_image_input.replace('.', f'_canny.')
-            processed_img.save(preprocessed_path)
-            logger.info(f"Saved Canny edges to: {preprocessed_path}")
-            # Use the preprocessed image as controlnet condition
-            controlnet_cond_image = preprocessed_path
-        elif preprocess_type == 'depth':
-            processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size)
-            # Save preprocessed image for reference
-            preprocessed_path = raw_image_input.replace('.', f'_depth.')
-            processed_img.save(preprocessed_path)
-            logger.info(f"Saved depth map to: {preprocessed_path}")
-            # Use the preprocessed image as controlnet condition
-            controlnet_cond_image = preprocessed_path
-        else:
-            logger.warning(f"Unknown preprocess_type: {preprocess_type}")
-        
-        logger.info(f"Preprocessing completed in {time.time() - preprocess_start:.2f}s")
-
+    # Prepare output directory first (before preprocessing)
     output_prep_start = time.time()
     sanitized_prompt = re.sub(r"[^\w\-\.]", "_", prompt)
     out_dir = os.path.join(
@@ -1385,6 +1380,36 @@ def main(
     os.makedirs(out_dir, exist_ok=False)
     logger.info(f"Output directory created: {out_dir}")
     logger.info(f"Output preparation in {time.time() - output_prep_start:.2f}s")
+    
+    # Handle raw image preprocessing in single mode (after output dir is created)
+    if raw_image_input and preprocess_type:
+        preprocess_start = time.time()
+        logger.info(f"Preprocessing raw image: {raw_image_input} with {preprocess_type}")
+        
+        # Load raw image
+        raw_img = Image.open(raw_image_input).convert("RGB")
+        
+        # Apply preprocessing
+        if preprocess_type == 'canny':
+            processed_img = preprocess_canny(raw_img, canny_low_threshold, canny_high_threshold)
+            # Save preprocessed image to output directory with _control suffix
+            control_image_path = os.path.join(out_dir, "000000_control.png")
+            processed_img.save(control_image_path)
+            logger.info(f"Saved Canny edges to: {control_image_path}")
+            # Use the preprocessed image as controlnet condition
+            controlnet_cond_image = control_image_path
+        elif preprocess_type == 'depth':
+            processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size)
+            # Save preprocessed image to output directory with _control suffix
+            control_image_path = os.path.join(out_dir, "000000_control.png")
+            processed_img.save(control_image_path)
+            logger.info(f"Saved depth map to: {control_image_path}")
+            # Use the preprocessed image as controlnet condition
+            controlnet_cond_image = control_image_path
+        else:
+            logger.warning(f"Unknown preprocess_type: {preprocess_type}")
+        
+        logger.info(f"Preprocessing completed in {time.time() - preprocess_start:.2f}s")
 
     generation_start = time.time()
     inferencer.gen_image(

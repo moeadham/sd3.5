@@ -7,8 +7,9 @@
         "canny_low_threshold": 50,
         "canny_high_threshold": 150,
         "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
-        "output": "outputs/batch/photo_canny_low50_high150.png",
-        "control_strength": 0.8
+        "output": "outputs/batch/photo_canny_low50_high150_seed51564.png",
+        "control_strength": 0.85,
+        "seed": 51564
     },
     {
         "prompt": "studio ghibli style",
@@ -18,8 +19,9 @@
         "canny_low_threshold": 100,
         "canny_high_threshold": 200,
         "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
-        "output": "outputs/batch/photo_canny_low100_high200.png",
-        "control_strength": 0.8
+        "output": "outputs/batch/photo_canny_low100_high200_seed51564.png",
+        "control_strength": 0.85,
+        "seed": 51564
     },
     {
         "prompt": "studio ghibli style",
@@ -29,8 +31,9 @@
         "canny_low_threshold": 150,
         "canny_high_threshold": 250,
         "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
-        "output": "outputs/batch/photo_canny_low150_high250.png",
-        "control_strength": 0.8
+        "output": "outputs/batch/photo_canny_low150_high250_seed51564.png",
+        "control_strength": 0.85,
+        "seed": 51564
 
     }
 ]
