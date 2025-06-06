@@ -153,36 +153,60 @@ logger.info(f"Total import time: {time.time() - import_start:.2f}s")
 ### Image preprocessing functions
 #################################################################################################
 
-def calculate_optimal_dimensions(input_width, input_height, base_resolution=1024, min_size=512, max_size=4096):
+def calculate_optimal_dimensions(input_width, input_height, base_resolution=1024, min_size=512, max_size=1344):
     """
     Calculate optimal dimensions for SD3 that maintain aspect ratio.
     All dimensions must be divisible by 64.
+    
+    Maximum dimensions: 1344x768 (landscape) or 768x1344 (portrait)
     """
-    # Check if input dimensions are already valid (divisible by 64 and within bounds)
+    aspect_ratio = input_width / input_height
+    
+    # Define max dimensions based on aspect ratio
+    if aspect_ratio > 1:  # Landscape
+        max_width = 1344
+        max_height = 768
+    else:  # Portrait
+        max_width = 768
+        max_height = 1344
+    
+    # Check if input dimensions are already valid and within specific bounds
     if (input_width % 64 == 0 and input_height % 64 == 0 and 
-        min_size <= input_width <= max_size and min_size <= input_height <= max_size):
+        min_size <= input_width <= max_width and min_size <= input_height <= max_height):
         # Input dimensions are already good, use them directly
         return input_width, input_height
     
-    aspect_ratio = input_width / input_height
-    
-    # For common HD resolutions, try to preserve them if possible
+    # For common HD resolutions, scale them down to fit within limits
     if input_width == 1920 and input_height == 1080:
-        return 1920, 1088  # 1088 is closest to 1080 and divisible by 64
+        return 1344, 768  # Scale down to max landscape
     elif input_width == 1080 and input_height == 1920:
-        return 1088, 1920
+        return 768, 1344  # Scale down to max portrait
     
-    # Otherwise, scale to base resolution
+    # Calculate dimensions maintaining aspect ratio
     if aspect_ratio > 1:  # Landscape
-        width = base_resolution
+        # Try to fit within max landscape dimensions
+        width = min(base_resolution, max_width)
         height = int(round(width / aspect_ratio / 64) * 64)
+        
+        # If height exceeds limit, scale by height instead
+        if height > max_height:
+            height = max_height
+            width = int(round(height * aspect_ratio / 64) * 64)
+            width = min(width, max_width)
     else:  # Portrait or square
-        height = base_resolution
+        # Try to fit within max portrait dimensions
+        height = min(base_resolution, max_height)
         width = int(round(height * aspect_ratio / 64) * 64)
+        
+        # If width exceeds limit, scale by width instead
+        if width > max_width:
+            width = max_width
+            height = int(round(width / aspect_ratio / 64) * 64)
+            height = min(height, max_height)
     
-    # Ensure dimensions are within bounds
-    width = max(min_size, min(max_size, width))
-    height = max(min_size, min(max_size, height))
+    # Final bounds check
+    width = max(min_size, min(max_width, width))
+    height = max(min_size, min(max_height, height))
     
     return width, height
 
@@ -1030,8 +1054,8 @@ class SD3Inferencer:
         # Extract parameters with defaults
         prompt = config.get('prompt', PROMPT)
         negative_prompt = config.get('negative_prompt', NEGATIVE_PROMPT)
-        width = config.get('width', WIDTH)
-        height = config.get('height', HEIGHT)
+        width = config.get('width')  # Don't use default yet
+        height = config.get('height')  # Don't use default yet
         steps = config.get('steps', STEPS)
         cfg_scale = config.get('cfg_scale', CFG_SCALE)
         sampler = config.get('sampler', SAMPLER)
@@ -1053,6 +1077,25 @@ class SD3Inferencer:
         depth_num_steps = config.get('depth_num_steps', 2)
         depth_ensemble_size = config.get('depth_ensemble_size', 4)
         
+        # Early dimension calculation if needed
+        if width is None or height is None:
+            if raw_image_input:
+                # Calculate from raw input image
+                temp_img = Image.open(raw_image_input)
+                input_width, input_height = temp_img.size
+                width, height = calculate_optimal_dimensions(input_width, input_height)
+                logger.info(f"  Auto-calculating dimensions from raw input {input_width}x{input_height} -> {width}x{height}")
+            elif controlnet_cond_image:
+                # Calculate from control image
+                temp_img = Image.open(controlnet_cond_image)
+                input_width, input_height = temp_img.size
+                width, height = calculate_optimal_dimensions(input_width, input_height)
+                logger.info(f"  Auto-calculating dimensions from control image {input_width}x{input_height} -> {width}x{height}")
+            else:
+                # Use defaults if no images provided
+                width = WIDTH if width is None else width
+                height = HEIGHT if height is None else height
+        
         logger.info(f"\nProcessing request: prompt='{prompt[:50]}...', output={output_path}")
         logger.info(f"  Size: {width}x{height}, Steps: {steps}, Seed: {seed}, Control strength: {control_strength}")
         
@@ -1063,12 +1106,6 @@ class SD3Inferencer:
             
             # Load raw image
             raw_img = Image.open(raw_image_input).convert("RGB")
-            
-            # If width/height not specified, calculate from input image aspect ratio
-            if config.get('width') is None or config.get('height') is None:
-                input_width, input_height = raw_img.size
-                width, height = calculate_optimal_dimensions(input_width, input_height)
-                logger.info(f"  Auto-calculated dimensions from input {input_width}x{input_height} -> {width}x{height}")
             
             # Apply preprocessing
             if preprocess_type == 'canny':
@@ -1132,12 +1169,6 @@ class SD3Inferencer:
             control_start = time.time()
             logger.info(f"  Loading controlnet condition: {controlnet_cond_image}")
             
-            # If width/height not specified and we have a control image, use its aspect ratio
-            if config.get('width') is None or config.get('height') is None:
-                control_img = Image.open(controlnet_cond_image)
-                input_width, input_height = control_img.size
-                width, height = calculate_optimal_dimensions(input_width, input_height)
-                logger.info(f"  Auto-calculated dimensions from control image {input_width}x{input_height} -> {width}x{height}")
             
             using_2b, control_type = False, 0
             if self.sd3.model.control_model is not None:
