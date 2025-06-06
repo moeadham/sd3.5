@@ -8,9 +8,9 @@ if [ -z "$HF_TOKEN" ]; then
 fi
 pip install --cache-dir=.venv/pip-cache -r requirements.txt
 
-git clone https://github.com/CompVis/depth-fm.git 
-mv depth-fm/depthfm depthfm
-rm -rf depth-fm
+# git clone https://github.com/CompVis/depth-fm.git 
+# mv depth-fm/depthfm depthfm
+# rm -rf depth-fm
 
 apt update && apt install -y aria2
 

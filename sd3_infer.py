@@ -200,28 +200,8 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     logger.info(f"Preprocessing image with DepthFM (steps: {depth_num_steps}, ensemble: {depth_ensemble_size})...")
     
     try:
-        # Add safe globals for OmegaConf BEFORE importing DepthFM (required for PyTorch 2.6+)
-        import torch.serialization
-        import omegaconf
-        import omegaconf.listconfig
-        import omegaconf.dictconfig
-        import omegaconf.base
-        
-        # Add all OmegaConf classes that might be in the checkpoint
-        torch.serialization.add_safe_globals([
-            omegaconf.listconfig.ListConfig,
-            omegaconf.dictconfig.DictConfig,
-            omegaconf.base.ContainerMetadata,
-            omegaconf.DictConfig,
-            omegaconf.ListConfig,
-        ])
-        
-        # Now import DepthFM
         from depthfm.dfm import DepthFM
-        logger.info("Successfully imported DepthFM")
-        
-    except ImportError as e:
-        logger.error(f"Import error details: {e}")
+    except ImportError:
         raise ImportError(
             "DepthFM not found. Please install it from https://github.com/CompVis/depth-fm"
         )

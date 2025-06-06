@@ -4,7 +4,6 @@ outputs/
 inputs/
 setup.txt
 .env
-depthfm/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
