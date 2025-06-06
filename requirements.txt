@@ -18,4 +18,4 @@ omegaconf
 matplotlib
 accelerate
 diffusers
-xformers==0.0.23
+# xformers==0.0.23 # will destroy numpy and others.
