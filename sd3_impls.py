@@ -150,7 +150,7 @@ class BaseModel(torch.nn.Module):
                 dtype=dtype,
             )
 
-    def apply_model(self, x, sigma, c_crossattn=None, y=None, skip_layers=[], controlnet_cond=None):
+    def apply_model(self, x, sigma, c_crossattn=None, y=None, skip_layers=[], controlnet_cond=None, control_strength=1.0):
         dtype = self.get_dtype()
         timestep = self.model_sampling.timestep(sigma).float()
         controlnet_hidden_states = None
@@ -167,7 +167,7 @@ class BaseModel(torch.nn.Module):
                 hw = x.shape[-2:]
                 x_controlnet = self.diffusion_model.x_embedder(x) + self.diffusion_model.cropped_pos_embed(hw)
             controlnet_hidden_states = self.control_model(
-                x_controlnet, controlnet_cond, y_cond, 1, sigma.to(torch.float32)
+                x_controlnet, controlnet_cond, y_cond, control_strength, sigma.to(torch.float32)
             )
         model_output = self.diffusion_model(
             x.to(dtype),
@@ -200,6 +200,8 @@ class CFGDenoiser(torch.nn.Module):
         cond,
         uncond,
         cond_scale,
+        controlnet_cond=None,
+        control_strength=1.0,
         **kwargs,
     ):
         # Run cond and uncond in a batch together
@@ -208,6 +210,8 @@ class CFGDenoiser(torch.nn.Module):
             torch.cat([timestep, timestep]),
             c_crossattn=torch.cat([cond["c_crossattn"], uncond["c_crossattn"]]),
             y=torch.cat([cond["y"], uncond["y"]]),
+            controlnet_cond=controlnet_cond,
+            control_strength=control_strength,
             **kwargs,
         )
         # Then split and apply CFG Scaling
@@ -236,6 +240,8 @@ class SkipLayerCFGDenoiser(torch.nn.Module):
         cond,
         uncond,
         cond_scale,
+        controlnet_cond=None,
+        control_strength=1.0,
         **kwargs,
     ):
         # Run cond and uncond in a batch together
@@ -244,6 +250,8 @@ class SkipLayerCFGDenoiser(torch.nn.Module):
             torch.cat([timestep, timestep]),
             c_crossattn=torch.cat([cond["c_crossattn"], uncond["c_crossattn"]]),
             y=torch.cat([cond["y"], uncond["y"]]),
+            controlnet_cond=controlnet_cond,
+            control_strength=control_strength,
             **kwargs,
         )
         # Then split and apply CFG Scaling
@@ -261,6 +269,8 @@ class SkipLayerCFGDenoiser(torch.nn.Module):
                 c_crossattn=cond["c_crossattn"],
                 y=cond["y"],
                 skip_layers=self.skip_layers,
+                controlnet_cond=controlnet_cond,
+                control_strength=control_strength,
             )
             # Then scale acc to skip layer guidance
             scaled = scaled + (pos_out - skip_layer_out) * self.slg

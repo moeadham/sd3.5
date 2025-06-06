@@ -1,0 +1,38 @@
+[
+    {
+        "prompt": "oil painting style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "raw_image_input": "inputs/photo.jpg",
+        "preprocess_type": "depth",
+        "depth_num_steps": 2,
+        "depth_ensemble_size": 4,
+        "depthfm_model_path": "models/depthfm.pth",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_depth.safetensors",
+        "output": "outputs/batch/photo_depth_steps2_ensemble4.png",
+        "control_strength": 0.8
+    },
+    {
+        "prompt": "oil painting style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "raw_image_input": "inputs/photo.jpg",
+        "preprocess_type": "depth",
+        "depth_num_steps": 4,
+        "depth_ensemble_size": 6,
+        "depthfm_model_path": "models/depthfm.pth",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_depth.safetensors",
+        "output": "outputs/batch/photo_depth_steps4_ensemble6.png",
+        "control_strength": 0.8
+    },
+    {
+        "prompt": "oil painting style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "raw_image_input": "inputs/photo.jpg",
+        "preprocess_type": "depth",
+        "depth_num_steps": 6,
+        "depth_ensemble_size": 8,
+        "depthfm_model_path": "models/depthfm.pth",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_depth.safetensors",
+        "output": "outputs/batch/photo_depth_steps6_ensemble8.png",
+        "control_strength": 0.8
+    }
+]

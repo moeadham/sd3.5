@@ -1,0 +1,88 @@
+[
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "controlnet_cond_image": "inputs/canny.png",
+        "output": "outputs/batch/canny_ghibli_cfg7.5_steps60.png",
+        "steps": 60,
+        "cfg_scale": 7.0
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "controlnet_cond_image": "inputs/canny.png",
+        "output": "outputs/batch/canny_ghibli_cfg6.0_steps60.png",
+        "steps": 60,
+        "cfg_scale": 6.0
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "controlnet_cond_image": "inputs/canny.png",
+        "output": "outputs/batch/canny_ghibli_cfg5.0_steps60.png",
+        "steps": 60,
+        "cfg_scale": 5.0
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "controlnet_cond_image": "inputs/canny.png",
+        "output": "outputs/batch/canny_ghibli_cfg4.5_steps60.png",
+        "steps": 60,
+        "cfg_scale": 4.0
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "controlnet_cond_image": "inputs/canny.png",
+        "output": "outputs/batch/canny_ghibli_cfg5.0_steps50.png",
+        "steps": 50,
+        "cfg_scale": 5.0
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "controlnet_cond_image": "inputs/canny.png",
+        "output": "outputs/batch/canny_ghibli_cfg5.0_steps40.png",
+        "steps": 40,
+        "cfg_scale": 5.0
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "controlnet_cond_image": "inputs/canny.png",
+        "output": "outputs/batch/canny_ghibli_strength1.0.png",
+        "control_strength": 1.0
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "controlnet_cond_image": "inputs/canny.png",
+        "output": "outputs/batch/canny_ghibli_strength0.7.png",
+        "control_strength": 0.7
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "controlnet_cond_image": "inputs/canny.png",
+        "output": "outputs/batch/canny_ghibli_strength0.5.png",
+        "control_strength": 0.5
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "controlnet_cond_image": "inputs/canny.png",
+        "output": "outputs/batch/canny_ghibli_strength0.1.png",
+        "control_strength": 0.1
+    }
+]

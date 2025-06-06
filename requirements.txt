@@ -5,8 +5,10 @@ torchvision
 numpy
 fire
 pillow
-numpy
 einops
 sentencepiece
 protobuf
 webdataset
+opencv-python
+safetensors
+tqdm

@@ -1,0 +1,36 @@
+[
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "raw_image_input": "inputs/photo.jpg",
+        "preprocess_type": "canny",
+        "canny_low_threshold": 50,
+        "canny_high_threshold": 150,
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "output": "outputs/batch/photo_canny_low50_high150.png",
+        "control_strength": 0.8
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "raw_image_input": "inputs/photo.jpg",
+        "preprocess_type": "canny",
+        "canny_low_threshold": 100,
+        "canny_high_threshold": 200,
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "output": "outputs/batch/photo_canny_low100_high200.png",
+        "control_strength": 0.8
+    },
+    {
+        "prompt": "studio ghibli style",
+        "negative_prompt": "blurry, low quality, incomplete",
+        "raw_image_input": "inputs/photo.jpg",
+        "preprocess_type": "canny",
+        "canny_low_threshold": 150,
+        "canny_high_threshold": 250,
+        "controlnet_ckpt": "models/sd3.5_large_controlnet_canny.safetensors",
+        "output": "outputs/batch/photo_canny_low150_high250.png",
+        "control_strength": 0.8
+
+    }
+]
