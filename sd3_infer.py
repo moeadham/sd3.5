@@ -220,14 +220,14 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     c, h, w = img_tensor.shape[1:]
     
     # Resize to 512x512 for DepthFM
-    img_resized = F.interpolate(img_tensor, (512, 512), mode='bilinear', align_corners=False)
+    img_resized = torch.nn.functional.interpolate(img_tensor, (512, 512), mode='bilinear', align_corners=False)
     
     # Generate depth map
     with torch.no_grad():
         depth = depthfm_model(img_resized, num_steps=depth_num_steps, ensemble_size=depth_ensemble_size)
     
     # Resize back to original dimensions
-    depth = F.interpolate(depth, (h, w), mode='bilinear', align_corners=False)
+    depth = torch.nn.functional.interpolate(depth, (h, w), mode='bilinear', align_corners=False)
     
     # Convert to PIL Image
     depth_np = depth.squeeze().cpu().numpy()
