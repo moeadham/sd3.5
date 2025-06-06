@@ -11,7 +11,7 @@
     "control_strength": 0.85,
     "cfg": 7.5,
     "steps": 50,
-    "sampler": "dpmpp_2m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   },
@@ -27,7 +27,7 @@
     "control_strength": 0.85,
     "cfg": 8.0,
     "steps": 50,
-    "sampler": "dpmpp_3m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   },
@@ -75,7 +75,7 @@
     "control_strength": 0.85,
     "cfg": 6.5,
     "steps": 50,
-    "sampler": "dpmpp_2m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   },
@@ -91,7 +91,7 @@
     "control_strength": 0.7,
     "cfg": 7.0,
     "steps": 50,
-    "sampler": "dpmpp_3m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   },
@@ -139,7 +139,7 @@
     "control_strength": 0.85,
     "cfg": 7.0,
     "steps": 60,
-    "sampler": "dpmpp_2m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   },
@@ -171,7 +171,7 @@
     "control_strength": 0.6,
     "cfg": 8.5,
     "steps": 50,
-    "sampler": "dpmpp_2m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   },
@@ -187,7 +187,7 @@
     "control_strength": 0.85,
     "cfg": 9.5,
     "steps": 50,
-    "sampler": "dpmpp_3m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   },
@@ -203,7 +203,7 @@
     "control_strength": 0.85,
     "cfg": 7.5,
     "steps": 50,
-    "sampler": "dpmpp_2m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   },
@@ -219,7 +219,7 @@
     "control_strength": 0.85,
     "cfg": 8.0,
     "steps": 50,
-    "sampler": "dpmpp_3m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   },
@@ -235,7 +235,7 @@
     "control_strength": 0.85,
     "cfg": 7.5,
     "steps": 50,
-    "sampler": "dpmpp_2m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   },
@@ -267,7 +267,7 @@
     "control_strength": 0.5,
     "cfg": 8.0,
     "steps": 50,
-    "sampler": "dpmpp_3m_sde",
+    "sampler": "dpmpp_2m",
     "text_encoder_device": "cuda",
     "seed": 51564
   }
