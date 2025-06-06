@@ -14,5 +14,5 @@ export CUDA_VISIBLE_DEVICES=0
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
 # Optional: Enable TF32 for better performance on H100
 export TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1
-python sd3_infer.py --controlnet_ckpt models/sd3.5_large_controlnet_depth.safetensors --controlnet_cond_image inputs/depth.png --prompt "studio ghibli style gymnast"
-
+#python sd3_infer.py --controlnet_ckpt models/sd3.5_large_controlnet_depth.safetensors --controlnet_cond_image inputs/depth.png --prompt "studio ghibli style gymnast"
+python sd3_infer.py --batch example_batch_canny.json
