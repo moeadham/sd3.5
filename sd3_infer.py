@@ -202,11 +202,44 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     try:
         # Add current directory to Python path to find depthfm module
         import sys
+        import os
+        
+        # Debug: Print current working directory
+        logger.info(f"Current working directory: {os.getcwd()}")
+        
+        # Debug: Check if depthfm directory exists
+        depthfm_path = os.path.join(os.getcwd(), 'depthfm')
+        logger.info(f"Checking for depthfm at: {depthfm_path}")
+        logger.info(f"depthfm directory exists: {os.path.exists(depthfm_path)}")
+        
+        # Debug: List contents of current directory
+        logger.info(f"Contents of current directory: {os.listdir('.')}")
+        
+        # Add current directory to Python path
         if '.' not in sys.path:
             sys.path.insert(0, '.')
+        
+        # Also try adding the absolute path
+        sys.path.insert(0, os.getcwd())
+        
+        # Debug: Print Python path
+        logger.info(f"Python path: {sys.path[:5]}")  # Show first 5 entries
+        
+        # Try to import
         from depthfm import DepthFM
+        logger.info("Successfully imported DepthFM")
+        
     except ImportError as e:
         logger.error(f"Import error details: {e}")
+        
+        # More debugging
+        try:
+            import depthfm
+            logger.info(f"depthfm module location: {depthfm.__file__ if hasattr(depthfm, '__file__') else 'No __file__ attribute'}")
+            logger.info(f"depthfm module attributes: {dir(depthfm)}")
+        except ImportError:
+            logger.error("Cannot even import depthfm module")
+        
         raise ImportError(
             "DepthFM not found. Please install it from https://github.com/CompVis/depth-fm"
         )
