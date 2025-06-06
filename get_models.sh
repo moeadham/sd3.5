@@ -8,6 +8,8 @@ if [ -z "$HF_TOKEN" ]; then
 fi
 pip install --cache-dir=.venv/pip-cache -r requirements.txt
 
+git clone https://github.com/CompVis/depth-fm.git depthfm
+
 apt update && apt install -y aria2
 
 # download the models:
