@@ -18,3 +18,4 @@ omegaconf
 matplotlib
 accelerate
 diffusers
+xformers==0.0.23

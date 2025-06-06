@@ -210,34 +210,48 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
         raise ValueError("depthfm_model_path must be provided for depth preprocessing")
     
     # Initialize DepthFM model
+    model_load_start = time.time()
     logger.info(f"Loading DepthFM model from {depthfm_model_path}")
     
     depthfm_model = DepthFM(ckpt_path=depthfm_model_path)
+    logger.info(f"  DepthFM model loaded in {time.time() - model_load_start:.2f}s")
     
     # Move model to GPU if available
+    device_start = time.time()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    logger.info(f"Moving DepthFM model to {device}")
+    logger.info(f"  Moving DepthFM model to {device}")
     depthfm_model = depthfm_model.to(device)
     depthfm_model.eval()
+    logger.info(f"  Model moved to {device} in {time.time() - device_start:.2f}s")
     
     # Convert PIL to tensor
+    tensor_start = time.time()
     img_tensor = F.to_tensor(img).unsqueeze(0)  # Add batch dimension
     c, h, w = img_tensor.shape[1:]
     
     # Move input to same device as model
     img_tensor = img_tensor.to(device)
+    logger.info(f"  Image converted to tensor and moved to {device} in {time.time() - tensor_start:.2f}s")
     
     # Resize to 512x512 for DepthFM
+    resize_start = time.time()
     img_resized = torch.nn.functional.interpolate(img_tensor, (512, 512), mode='bilinear', align_corners=False)
+    logger.info(f"  Image resized to 512x512 in {time.time() - resize_start:.2f}s")
     
     # Generate depth map
+    depth_gen_start = time.time()
+    logger.info(f"  Generating depth map with {depth_num_steps} steps, ensemble size {depth_ensemble_size}...")
     with torch.no_grad():
         depth = depthfm_model(img_resized, num_steps=depth_num_steps, ensemble_size=depth_ensemble_size)
+    logger.info(f"  Depth map generated in {time.time() - depth_gen_start:.2f}s")
     
     # Resize back to original dimensions
+    resize_back_start = time.time()
     depth = torch.nn.functional.interpolate(depth, (h, w), mode='bilinear', align_corners=False)
+    logger.info(f"  Depth map resized to original dimensions in {time.time() - resize_back_start:.2f}s")
     
     # Convert to PIL Image
+    convert_start = time.time()
     depth_np = depth.squeeze().cpu().numpy()
     
     # Normalize to 0-255 range
@@ -246,6 +260,7 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     # Convert to PIL and then to RGB
     depth_pil = Image.fromarray(depth_normalized)
     depth_rgb = depth_pil.convert('RGB')
+    logger.info(f"  Converted to PIL RGB image in {time.time() - convert_start:.2f}s")
     
     logger.info(f"Depth preprocessing completed in {time.time() - preprocess_start:.2f}s")
     return depth_rgb
