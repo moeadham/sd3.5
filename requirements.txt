@@ -18,5 +18,3 @@ omegaconf
 matplotlib
 accelerate
 diffusers
-huggingface_hub
-xformers

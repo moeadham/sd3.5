@@ -199,34 +199,9 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     preprocess_start = time.time()
     logger.info(f"Preprocessing image with DepthFM (steps: {depth_num_steps}, ensemble: {depth_ensemble_size})...")
     
-    try:
-        # Add current directory to Python path to find depthfm module
-        import sys
-        import os
-        
-        # Debug: Print current working directory
-        logger.info(f"Current working directory: {os.getcwd()}")
-        
-        # Debug: Check if depthfm directory exists
-        depthfm_path = os.path.join(os.getcwd(), 'depthfm')
-        logger.info(f"Checking for depthfm at: {depthfm_path}")
-        logger.info(f"depthfm directory exists: {os.path.exists(depthfm_path)}")
-        
-        # Debug: List contents of current directory
-        logger.info(f"Contents of current directory: {os.listdir('.')}")
-        
-        # Add current directory to Python path
-        if '.' not in sys.path:
-            sys.path.insert(0, '.')
-        
-        # Also try adding the absolute path
-        sys.path.insert(0, os.getcwd())
-        
-        # Debug: Print Python path
-        logger.info(f"Python path: {sys.path[:5]}")  # Show first 5 entries
-        
+    try:        
         # Try to import
-        from depthfm import DepthFM
+        from depthfm.dfm import DepthFM
         logger.info("Successfully imported DepthFM")
         
     except ImportError as e:
