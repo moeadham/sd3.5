@@ -199,22 +199,29 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     preprocess_start = time.time()
     logger.info(f"Preprocessing image with DepthFM (steps: {depth_num_steps}, ensemble: {depth_ensemble_size})...")
     
-    try:        
-        # Try to import
+    try:
+        # Add safe globals for OmegaConf BEFORE importing DepthFM (required for PyTorch 2.6+)
+        import torch.serialization
+        import omegaconf
+        import omegaconf.listconfig
+        import omegaconf.dictconfig
+        import omegaconf.base
+        
+        # Add all OmegaConf classes that might be in the checkpoint
+        torch.serialization.add_safe_globals([
+            omegaconf.listconfig.ListConfig,
+            omegaconf.dictconfig.DictConfig,
+            omegaconf.base.ContainerMetadata,
+            omegaconf.DictConfig,
+            omegaconf.ListConfig,
+        ])
+        
+        # Now import DepthFM
         from depthfm.dfm import DepthFM
         logger.info("Successfully imported DepthFM")
         
     except ImportError as e:
         logger.error(f"Import error details: {e}")
-        
-        # More debugging
-        try:
-            import depthfm
-            logger.info(f"depthfm module location: {depthfm.__file__ if hasattr(depthfm, '__file__') else 'No __file__ attribute'}")
-            logger.info(f"depthfm module attributes: {dir(depthfm)}")
-        except ImportError:
-            logger.error("Cannot even import depthfm module")
-        
         raise ImportError(
             "DepthFM not found. Please install it from https://github.com/CompVis/depth-fm"
         )
@@ -224,15 +231,6 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     
     # Initialize DepthFM model
     logger.info(f"Loading DepthFM model from {depthfm_model_path}")
-    
-    # Add safe globals for OmegaConf (required for PyTorch 2.6+)
-    import torch.serialization
-    import omegaconf.listconfig
-    import omegaconf.dictconfig
-    torch.serialization.add_safe_globals([
-        omegaconf.listconfig.ListConfig,
-        omegaconf.dictconfig.DictConfig
-    ])
     
     depthfm_model = DepthFM(ckpt_path=depthfm_model_path)
     depthfm_model.eval()
