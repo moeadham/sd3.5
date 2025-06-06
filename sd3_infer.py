@@ -200,8 +200,13 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     logger.info(f"Preprocessing image with DepthFM (steps: {depth_num_steps}, ensemble: {depth_ensemble_size})...")
     
     try:
+        # Add current directory to Python path to find depthfm module
+        import sys
+        if '.' not in sys.path:
+            sys.path.insert(0, '.')
         from depthfm.dfm import DepthFM
-    except ImportError:
+    except ImportError as e:
+        logger.error(f"Import error details: {e}")
         raise ImportError(
             "DepthFM not found. Please install it from https://github.com/CompVis/depth-fm"
         )
