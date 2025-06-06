@@ -12,3 +12,11 @@ webdataset
 opencv-python
 safetensors
 tqdm
+# depthfm
+torchdiffeq
+omegaconf
+matplotlib
+accelerate
+diffusers
+huggingface_hub
+xformers
