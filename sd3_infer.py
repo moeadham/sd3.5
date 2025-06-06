@@ -204,7 +204,7 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
         import sys
         if '.' not in sys.path:
             sys.path.insert(0, '.')
-        from depthfm.dfm import DepthFM
+        from depthfm import DepthFM
     except ImportError as e:
         logger.error(f"Import error details: {e}")
         raise ImportError(
