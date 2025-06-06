@@ -35,10 +35,10 @@ aria2c -x 16 -s 16 -k 1M \
 mv d6ded6aa4f60eda74ae48a8fdc1a9fa11b36f05488975916f1ecd4834fddffd0 sd3.5_large_controlnet_depth.safetensors
 
 #blur
-aria2c -x 16 -s 16 -k 1M \
-  --header="Authorization: Bearer $HF_TOKEN" \
-  "https://huggingface.co/stabilityai/stable-diffusion-3.5-controlnets/resolve/main/sd3.5_large_controlnet_blur.safetensors"
-mv 43d71c6f570d93e04a2d00711c530c74dcd7eef5d322efaab967c2d8296854dc sd3.5_large_controlnet_blur.safetensors
+# aria2c -x 16 -s 16 -k 1M \
+#   --header="Authorization: Bearer $HF_TOKEN" \
+#   "https://huggingface.co/stabilityai/stable-diffusion-3.5-controlnets/resolve/main/sd3.5_large_controlnet_blur.safetensors"
+# mv 43d71c6f570d93e04a2d00711c530c74dcd7eef5d322efaab967c2d8296854dc sd3.5_large_controlnet_blur.safetensors
 
 # models/clip_g.safetensors
 aria2c -x 16 -s 16 -k 1M \
@@ -58,7 +58,6 @@ aria2c -x 16 -s 16 -k 1M \
   --header="Authorization: Bearer $HF_TOKEN" \
   "https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/text_encoders/t5xxl_fp16.safetensors"
 mv 6e480b09fae049a72d2a8c5fbccb8d3e92febeb233bbe9dfe7256958a9167635 t5xxl.safetensors
-## warn warn - is it okay to remove _fp16?
 
 # vae
 aria2c -x 16 -s 16 -k 1M \
