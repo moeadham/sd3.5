@@ -1054,6 +1054,62 @@ class SD3Inferencer:
         """Process a single request configuration without reloading models."""
         request_start = time.time()
         
+        # Define all valid parameters for batch requests
+        valid_params = {
+            'prompt', 'negative_prompt', 'width', 'height', 'steps', 'cfg_scale',
+            'sampler', 'seed', 'seed_type', 'output', 'controlnet_cond_image',
+            'control_strength', 'init_image', 'denoise', 'skip_layer_config',
+            'raw_image_input', 'preprocess_type', 'depthfm_model_path',
+            'canny_low_threshold', 'canny_high_threshold', 'depth_num_steps',
+            'depth_ensemble_size', 'model', 'vae', 'controlnet_ckpt', 'shift',
+            'model_folder', 'text_encoder_device', 'verbose', 'skip_layer_cfg'
+        }
+        
+        # Check for unrecognized parameters
+        unrecognized = set(config.keys()) - valid_params
+        if unrecognized:
+            # Check for common mistakes
+            corrections = {
+                'cfg': 'cfg_scale',
+                'control_net': 'controlnet_ckpt',
+                'controlnet': 'controlnet_ckpt',
+                'control_image': 'controlnet_cond_image',
+                'negative': 'negative_prompt',
+                'neg_prompt': 'negative_prompt',
+                'canny_low': 'canny_low_threshold',
+                'canny_high': 'canny_high_threshold',
+                'depth_steps': 'depth_num_steps',
+                'depth_ensemble': 'depth_ensemble_size',
+                'seed_mode': 'seed_type',
+                'denoising': 'denoise',
+                'denoising_strength': 'denoise',
+                'control_weight': 'control_strength',
+                'skip_layers': 'skip_layer_config',
+                'encoder_device': 'text_encoder_device',
+                'preprocessing': 'preprocess_type',
+                'raw_image': 'raw_image_input',
+                'depthfm_path': 'depthfm_model_path',
+                'depthfm_model': 'depthfm_model_path',
+            }
+            
+            suggestions = []
+            for param in unrecognized:
+                if param in corrections:
+                    suggestions.append(f"'{param}' -> '{corrections[param]}'")
+                else:
+                    # Find closest match using simple string similarity
+                    close_matches = [p for p in valid_params if param.lower() in p.lower() or p.lower() in param.lower()]
+                    if close_matches:
+                        suggestions.append(f"'{param}' -> maybe '{close_matches[0]}'?")
+                    else:
+                        suggestions.append(f"'{param}' is not recognized")
+            
+            raise ValueError(
+                f"Unrecognized parameters in batch config: {sorted(unrecognized)}\n"
+                f"Suggestions: {', '.join(suggestions)}\n"
+                f"Valid parameters are: {sorted(valid_params)}"
+            )
+        
         # Extract parameters with defaults
         prompt = config.get('prompt', PROMPT)
         negative_prompt = config.get('negative_prompt', NEGATIVE_PROMPT)
@@ -1071,6 +1127,16 @@ class SD3Inferencer:
         denoise = config.get('denoise', DENOISE)
         skip_layer_config = config.get('skip_layer_config', {})
         
+        # Validate skip_layer_config if provided
+        if skip_layer_config:
+            valid_skip_params = {'scale', 'start', 'end', 'layers', 'cfg'}
+            unrecognized_skip = set(skip_layer_config.keys()) - valid_skip_params
+            if unrecognized_skip:
+                raise ValueError(
+                    f"Unrecognized parameters in skip_layer_config: {sorted(unrecognized_skip)}\n"
+                    f"Valid skip_layer_config parameters are: {sorted(valid_skip_params)}"
+                )
+        
         # New preprocessing parameters
         raw_image_input = config.get('raw_image_input')
         preprocess_type = config.get('preprocess_type')  # 'canny' or 'depth'
@@ -1079,6 +1145,24 @@ class SD3Inferencer:
         canny_high_threshold = config.get('canny_high_threshold', 200)
         depth_num_steps = config.get('depth_num_steps', 2)
         depth_ensemble_size = config.get('depth_ensemble_size', 4)
+        
+        # Validate parameter values
+        if width is not None and (width <= 0 or width % 64 != 0):
+            raise ValueError(f"Width must be positive and divisible by 64, got {width}")
+        if height is not None and (height <= 0 or height % 64 != 0):
+            raise ValueError(f"Height must be positive and divisible by 64, got {height}")
+        if steps <= 0:
+            raise ValueError(f"Steps must be positive, got {steps}")
+        if cfg_scale < 0:
+            raise ValueError(f"cfg_scale must be non-negative, got {cfg_scale}")
+        if not 0.0 <= control_strength <= 1.0:
+            raise ValueError(f"control_strength must be between 0.0 and 1.0, got {control_strength}")
+        if not 0.0 <= denoise <= 1.0:
+            raise ValueError(f"denoise must be between 0.0 and 1.0, got {denoise}")
+        if seed_type not in ['fixed', 'rand', 'roll']:
+            raise ValueError(f"seed_type must be 'fixed', 'rand', or 'roll', got '{seed_type}'")
+        if preprocess_type and preprocess_type not in ['canny', 'depth']:
+            raise ValueError(f"preprocess_type must be 'canny' or 'depth', got '{preprocess_type}'")
         
         # Early dimension calculation if needed
         if width is None or height is None:
