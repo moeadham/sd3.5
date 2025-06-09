@@ -137,6 +137,9 @@ pipe = StableDiffusion3ControlNetPipeline.from_pretrained(
     torch_dtype=torch_dtype,
     cache_dir=cache_dir
 )
+pipe.text_encoder.to(torch.float16)
+pipe.controlnet.to(torch.float16)
+pipe.to("cuda")
 pipeline_load_time = time.time() - pipeline_load_start
 logger.info(f"Pipeline loading took {pipeline_load_time:.4f} seconds")
 
@@ -146,10 +149,12 @@ logger.info(f"Total model loading time: {total_model_load_time:.4f} seconds")
 # generate image
 logger.info("Starting image generation...")
 generation_start = time.time()
+generator = torch.Generator(device="cuda").manual_seed(24)
 image = pipe(
     "futuristic-looking woman",
     control_image=canny_image,
     controlnet_conditioning_scale=0.85,
+    generator=generator,
 ).images[0]
 generation_time = time.time() - generation_start
 logger.info(f"Image generation took {generation_time:.4f} seconds")
