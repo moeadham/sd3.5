@@ -27,7 +27,8 @@ import_time = time.time() - import_start
 logger.info(f"os import took {import_time:.4f} seconds")
 
 import_start = time.time()
-from diffusers import StableDiffusionControlNetImg2ImgPipeline, ControlNetModel, UniPCMultistepScheduler
+from diffusers import StableDiffusion3ControlNetPipeline
+from diffusers.models import SD3ControlNetModel, SD3MultiControlNetModel
 import_time = time.time() - import_start
 logger.info(f"diffusers import took {import_time:.4f} seconds")
 
@@ -120,7 +121,7 @@ logger.info(f"Canny image saving took {canny_save_time:.4f} seconds")
 # load control net and stable diffusion v1-5
 logger.info("Loading ControlNet model...")
 controlnet_load_start = time.time()
-controlnet = ControlNetModel.from_pretrained(
+controlnet = SD3ControlNetModel.from_pretrained(
     controlnet_repo_id, 
     torch_dtype=torch_dtype,
     cache_dir=cache_dir
@@ -130,7 +131,7 @@ logger.info(f"ControlNet loading took {controlnet_load_time:.4f} seconds")
 
 logger.info("Loading Stable Diffusion pipeline...")
 pipeline_load_start = time.time()
-pipe = StableDiffusionControlNetImg2ImgPipeline.from_pretrained(
+pipe = StableDiffusion3ControlNetPipeline.from_pretrained(
     model_repo_id, 
     controlnet=controlnet, 
     torch_dtype=torch_dtype,
@@ -159,6 +160,7 @@ image = pipe(
     generator=generator,
     image=image,
     control_image=canny_image,
+    controlnet_conditioning_scale=0.7
 ).images[0]
 generation_time = time.time() - generation_start
 logger.info(f"Image generation took {generation_time:.4f} seconds")
