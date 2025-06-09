@@ -223,10 +223,18 @@ def preprocess_canny(img, canny_low_threshold=100, canny_high_threshold=200, tar
     """
     preprocess_start = time.time()
     logger.info(f"Preprocessing image with Canny edge detection (thresholds: {canny_low_threshold}-{canny_high_threshold})...")
+    
+    orig_width, orig_height = img.size
+    logger.info(f"  Input image dimensions: {orig_width}x{orig_height}")
+    
+    # Resize input image to target dimensions BEFORE edge detection
     if target_width is not None and target_height is not None:
-        logger.info(f"  Target output dimensions: {target_width}x{target_height}")
+        if orig_width != target_width or orig_height != target_height:
+            logger.info(f"  Resizing input image to {target_width}x{target_height} before edge detection")
+            img = img.resize((target_width, target_height), Image.LANCZOS)
+        logger.info(f"  Processing Canny at: {target_width}x{target_height}")
     else:
-        logger.info(f"  Target output dimensions: Original image dimensions")
+        logger.info(f"  Processing Canny at original dimensions: {orig_width}x{orig_height}")
     
     # Convert PIL to tensor then to numpy
     img_tensor = F.to_tensor(img)
@@ -246,13 +254,6 @@ def preprocess_canny(img, canny_low_threshold=100, canny_high_threshold=200, tar
     
     # Convert to RGB (Canny outputs single channel)
     edges_rgb = edges_pil.convert('RGB')
-    
-    # Resize if target dimensions specified
-    if target_width is not None and target_height is not None:
-        orig_width, orig_height = edges_rgb.size
-        if orig_width != target_width or orig_height != target_height:
-            logger.info(f"  Resizing Canny edges from {orig_width}x{orig_height} to {target_width}x{target_height}")
-            edges_rgb = edges_rgb.resize((target_width, target_height), Image.LANCZOS)
     
     logger.info(f"Canny preprocessing completed in {time.time() - preprocess_start:.2f}s")
     return edges_rgb
@@ -322,6 +323,8 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     img_tensor = F.to_tensor(img).unsqueeze(0)  # Add batch dimension
     c, h, w = img_tensor.shape[1:]
     logger.info(f"  Input image dimensions: {w}x{h}")
+    # Note: We process at original resolution for better depth estimation quality,
+    # then resize after. DepthFM will internally process at 512x512 anyway.
     
     # Move input to same device as model
     img_tensor = img_tensor.to(device)
