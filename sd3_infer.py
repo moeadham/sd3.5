@@ -645,7 +645,7 @@ class SD3Inferencer:
         shift=SHIFT,
         controlnet_ckpt=None,
         model_folder: str = MODEL_FOLDER,
-        text_encoder_device: str = "cpu",
+        text_encoder_device: str = "cuda",
         verbose=False,
         load_tokenizers: bool = True,
     ):
