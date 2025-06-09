@@ -61,10 +61,10 @@ total_import_time = time.time() - total_import_start
 logger.info(f"Total import time: {total_import_time:.4f} seconds")
 
 # Set cache directories
-# os.environ["HF_HOME"] = "./cache"
-# os.environ["HUGGINGFACE_HUB_CACHE"] = "hub"
-# os.environ["TRANSFORMERS_CACHE"] = "transformers"
-# os.environ["HF_DATASETS_CACHE"] = "datasets"
+os.environ["HF_HOME"] = "./cache"
+os.environ["HUGGINGFACE_HUB_CACHE"] = "hub"
+os.environ["TRANSFORMERS_CACHE"] = "transformers"
+os.environ["HF_DATASETS_CACHE"] = "datasets"
 
 logger.info("Starting HuggingFace login...")
 login_start = time.time()
@@ -90,7 +90,7 @@ logger.info(f"Torch dtype: {torch_dtype}")
 logger.info("Starting image download...")
 image_load_start = time.time()
 image = load_image(
-    "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/sd_controlnet/bird_canny.png"
+    "./inputs/square.png"
 )
 image_load_time = time.time() - image_load_start
 logger.info(f"Image loading took {image_load_time:.4f} seconds")
@@ -147,15 +147,15 @@ logger.info(f"Total model loading time: {total_model_load_time:.4f} seconds")
 # generate image
 logger.info("Starting image generation...")
 generation_start = time.time()
-generator = torch.Generator(device="cuda").manual_seed(24)
-image = pipe(
-    "A bird in space",
-    control_image=image,
+#generator = torch.Generator(device="cuda").manual_seed(24)
+prompt = "studio ghibli style cartoon"
+image = pipe(prompt,
+    control_image=canny_image,
     controlnet_conditioning_scale=0.85,
-    generator=generator,
+    #generator=generator,
     height=1024, 
-    width=768,
-    num_inference_steps=60,
+    width=1024,
+    #num_inference_steps=60,
 ).images[0]
 generation_time = time.time() - generation_start
 logger.info(f"Image generation took {generation_time:.4f} seconds")
