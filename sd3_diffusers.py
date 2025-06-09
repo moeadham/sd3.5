@@ -111,6 +111,7 @@ canny_time = time.time() - canny_start
 logger.info(f"Canny edge detection took {canny_time:.4f} seconds")
 logger.info("Saving Canny edge detection image...")
 canny_save_start = time.time()
+os.makedirs("outputs/diffusers", exist_ok=True)
 canny_image.save("outputs/diffusers/diffusers_canny.png")
 canny_save_time = time.time() - canny_save_start
 logger.info(f"Canny image saving took {canny_save_time:.4f} seconds")
