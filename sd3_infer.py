@@ -211,16 +211,22 @@ def calculate_optimal_dimensions(input_width, input_height, base_resolution=1024
     return width, height
 
 
-def preprocess_canny(img, canny_low_threshold=100, canny_high_threshold=200):
+def preprocess_canny(img, canny_low_threshold=100, canny_high_threshold=200, target_width=None, target_height=None):
     """Convert PIL image to Canny edge detection.
     
     Args:
         img: PIL Image
         canny_low_threshold: Lower threshold for edge detection (default: 100)
         canny_high_threshold: Upper threshold for edge detection (default: 200)
+        target_width: Target width for the edge map (if None, uses original dimensions)
+        target_height: Target height for the edge map (if None, uses original dimensions)
     """
     preprocess_start = time.time()
     logger.info(f"Preprocessing image with Canny edge detection (thresholds: {canny_low_threshold}-{canny_high_threshold})...")
+    if target_width is not None and target_height is not None:
+        logger.info(f"  Target output dimensions: {target_width}x{target_height}")
+    else:
+        logger.info(f"  Target output dimensions: Original image dimensions")
     
     # Convert PIL to tensor then to numpy
     img_tensor = F.to_tensor(img)
@@ -240,6 +246,13 @@ def preprocess_canny(img, canny_low_threshold=100, canny_high_threshold=200):
     
     # Convert to RGB (Canny outputs single channel)
     edges_rgb = edges_pil.convert('RGB')
+    
+    # Resize if target dimensions specified
+    if target_width is not None and target_height is not None:
+        orig_width, orig_height = edges_rgb.size
+        if orig_width != target_width or orig_height != target_height:
+            logger.info(f"  Resizing Canny edges from {orig_width}x{orig_height} to {target_width}x{target_height}")
+            edges_rgb = edges_rgb.resize((target_width, target_height), Image.LANCZOS)
     
     logger.info(f"Canny preprocessing completed in {time.time() - preprocess_start:.2f}s")
     return edges_rgb
@@ -1214,7 +1227,7 @@ class SD3Inferencer:
             
             # Apply preprocessing
             if preprocess_type == 'canny':
-                processed_img = preprocess_canny(raw_img, canny_low_threshold, canny_high_threshold)
+                processed_img = preprocess_canny(raw_img, canny_low_threshold, canny_high_threshold, width, height)
                 # Save preprocessed image to the same directory as output
                 if output_path:
                     # Get the output directory and filename
@@ -1641,7 +1654,7 @@ def main(
         
         # Apply preprocessing
         if preprocess_type == 'canny':
-            processed_img = preprocess_canny(raw_img, canny_low_threshold, canny_high_threshold)
+            processed_img = preprocess_canny(raw_img, canny_low_threshold, canny_high_threshold, width, height)
             # Save preprocessed image to output directory with _control suffix
             control_image_path = os.path.join(out_dir, "000000_control.png")
             processed_img.save(control_image_path)
