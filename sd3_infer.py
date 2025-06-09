@@ -245,7 +245,7 @@ def preprocess_canny(img, canny_low_threshold=100, canny_high_threshold=200):
     return edges_rgb
 
 
-def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ensemble_size=4, depthfm_cache=None):
+def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ensemble_size=4, depthfm_cache=None, target_width=None, target_height=None):
     """Convert PIL image to depth map using DepthFM.
     
     Args:
@@ -253,6 +253,9 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
         depthfm_model_path: Path to DepthFM model checkpoint
         depth_num_steps: Number of denoising steps (default: 2)
         depth_ensemble_size: Number of predictions to ensemble (default: 4)
+        depthfm_cache: Cache for DepthFM models
+        target_width: Target width for the depth map (if None, uses original dimensions)
+        target_height: Target height for the depth map (if None, uses original dimensions)
     """
     preprocess_start = time.time()
     logger.info(f"Preprocessing image with DepthFM (steps: {depth_num_steps}, ensemble: {depth_ensemble_size})...")
@@ -318,10 +321,12 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
         depth = depthfm_model(img_resized, num_steps=depth_num_steps, ensemble_size=depth_ensemble_size)
     logger.info(f"  Depth map generated in {time.time() - depth_gen_start:.2f}s")
     
-    # Resize back to original dimensions
+    # Resize to target dimensions (or original if not specified)
     resize_back_start = time.time()
-    depth = torch.nn.functional.interpolate(depth, (h, w), mode='bilinear', align_corners=False)
-    logger.info(f"  Depth map resized to original dimensions in {time.time() - resize_back_start:.2f}s")
+    target_h = target_height if target_height is not None else h
+    target_w = target_width if target_width is not None else w
+    depth = torch.nn.functional.interpolate(depth, (target_h, target_w), mode='bilinear', align_corners=False)
+    logger.info(f"  Depth map resized to {target_w}x{target_h} in {time.time() - resize_back_start:.2f}s")
     
     # Convert to PIL Image
     convert_start = time.time()
@@ -1216,7 +1221,7 @@ class SD3Inferencer:
                 # Use the preprocessed image as controlnet condition
                 controlnet_cond_image = control_image_path
             elif preprocess_type == 'depth':
-                processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size, self._depthfm_cache)
+                processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size, self._depthfm_cache, width, height)
                 # Save preprocessed image to the same directory as output
                 if output_path:
                     # Get the output directory and filename
@@ -1617,7 +1622,7 @@ def main(
             # Use the preprocessed image as controlnet condition
             controlnet_cond_image = control_image_path
         elif preprocess_type == 'depth':
-            processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size)
+            processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size, None, width, height)
             # Save preprocessed image to output directory with _control suffix
             control_image_path = os.path.join(out_dir, "000000_control.png")
             processed_img.save(control_image_path)

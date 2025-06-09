@@ -17,7 +17,6 @@
         "seed_type": "fixed",
         "text_encoder_device": "cuda"
     },
-    
     {
         "prompt": "studio ghibli style",
         "negative_prompt": "blurry, low quality, incomplete",
@@ -72,7 +71,6 @@
         "seed_type": "fixed",
         "text_encoder_device": "cuda"
     },
-    
     {
         "prompt": "studio ghibli style",
         "negative_prompt": "blurry, low quality, incomplete",
@@ -127,7 +125,6 @@
         "seed_type": "fixed",
         "text_encoder_device": "cuda"
     },
-    
     {
         "prompt": "studio ghibli style",
         "negative_prompt": "blurry, low quality, incomplete",
@@ -254,7 +251,6 @@
         "seed_type": "fixed",
         "text_encoder_device": "cuda"
     },
-    
     {
         "prompt": "studio ghibli style",
         "negative_prompt": "blurry, low quality, incomplete",
@@ -363,7 +359,6 @@
         "seed_type": "fixed",
         "text_encoder_device": "cuda"
     },
-    
     {
         "prompt": "studio ghibli style",
         "negative_prompt": "blurry, low quality, incomplete",
@@ -490,7 +485,6 @@
         "seed_type": "fixed",
         "text_encoder_device": "cuda"
     },
-    
     {
         "prompt": "studio ghibli style",
         "negative_prompt": "blurry, low quality, incomplete",
@@ -509,7 +503,6 @@
         "seed_type": "fixed",
         "text_encoder_device": "cuda"
     },
-    
     {
         "prompt": "studio ghibli style",
         "negative_prompt": "blurry, low quality, incomplete",
@@ -567,7 +560,6 @@
         "denoise": 1.0,
         "text_encoder_device": "cuda"
     },
-    
     {
         "prompt": "studio ghibli style, magical atmosphere, whimsical creatures, soft colors, fantasy world",
         "negative_prompt": "blurry, low quality, incomplete",
@@ -586,7 +578,6 @@
         "seed_type": "fixed",
         "text_encoder_device": "cuda"
     },
-    
     {
         "prompt": "studio ghibli style",
         "negative_prompt": "blurry, low quality, incomplete, dark, horror, realistic, photographic, modern, urban",
@@ -605,70 +596,4 @@
         "seed_type": "fixed",
         "text_encoder_device": "cuda"
     },
-    
-    {
-        "prompt": "studio ghibli style",
-        "negative_prompt": "blurry, low quality, incomplete",
-        "raw_image_input": "inputs/image.jpg",
-        "preprocess_type": "depth",
-        "depth_num_steps": 2,
-        "depth_ensemble_size": 4,
-        "depthfm_model_path": "models/depthfm-v1.ckpt",
-        "controlnet_ckpt": "models/sd3.5_large_controlnet_depth.safetensors",
-        "output": "outputs/batch_test/vary_shift2.png",
-        "control_strength": 0.85,
-        "steps": 60,
-        "cfg_scale": 3.5,
-        "sampler": "euler",
-        "seed": 23,
-        "seed_type": "fixed",
-        "shift": 2.0,
-        "text_encoder_device": "cuda"
-    },
-    {
-        "prompt": "studio ghibli style",
-        "negative_prompt": "blurry, low quality, incomplete",
-        "raw_image_input": "inputs/image.jpg",
-        "preprocess_type": "depth",
-        "depth_num_steps": 2,
-        "depth_ensemble_size": 4,
-        "depthfm_model_path": "models/depthfm-v1.ckpt",
-        "controlnet_ckpt": "models/sd3.5_large_controlnet_depth.safetensors",
-        "output": "outputs/batch_test/vary_shift4.png",
-        "control_strength": 0.85,
-        "steps": 60,
-        "cfg_scale": 3.5,
-        "sampler": "euler",
-        "seed": 23,
-        "seed_type": "fixed",
-        "shift": 4.0,
-        "text_encoder_device": "cuda"
-    },
-    
-    {
-        "prompt": "studio ghibli style",
-        "negative_prompt": "blurry, low quality, incomplete",
-        "raw_image_input": "inputs/image.jpg",
-        "preprocess_type": "depth",
-        "depth_num_steps": 2,
-        "depth_ensemble_size": 4,
-        "depthfm_model_path": "models/depthfm-v1.ckpt",
-        "controlnet_ckpt": "models/sd3.5_large_controlnet_depth.safetensors",
-        "output": "outputs/batch_test/vary_skip_layer_cfg.png",
-        "control_strength": 0.85,
-        "steps": 60,
-        "cfg_scale": 3.5,
-        "sampler": "euler",
-        "seed": 23,
-        "seed_type": "fixed",
-        "skip_layer_cfg": true,
-        "skip_layer_config": {
-            "scale": 2.5,
-            "start": 0.01,
-            "end": 0.20,
-            "layers": [7, 8, 9],
-            "cfg": 4.0
-        },
-        "text_encoder_device": "cuda"
-    }
 ]
