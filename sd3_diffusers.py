@@ -77,8 +77,8 @@ logger.info(f"Using device: {device}")
 
 # Set cache directory
 cache_dir = "./cache"
-model_repo_id = "stabilityai/stable-diffusion-3.5-large"
-controlnet_repo_id = "stabilityai/stable-diffusion-3.5-large-controlnet-canny"
+model_repo_id = "stabilityai/stable-diffusion-3-medium-diffusers"#"stabilityai/stable-diffusion-3.5-large"
+controlnet_repo_id = "InstantX/SD3-Controlnet-Canny"#"stabilityai/stable-diffusion-3.5-large-controlnet-canny"
 torch_dtype = torch.bfloat16
 
 logger.info(f"Model repo: {model_repo_id}")
