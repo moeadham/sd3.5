@@ -148,7 +148,6 @@ logger.info("Starting image generation...")
 generation_start = time.time()
 image = pipe(
     "futuristic-looking woman",
-    image=image,
     control_image=canny_image,
     controlnet_conditioning_scale=0.85,
 ).images[0]
