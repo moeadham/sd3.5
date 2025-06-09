@@ -137,8 +137,6 @@ pipe = StableDiffusion3ControlNetPipeline.from_pretrained(
     torch_dtype=torch_dtype,
     cache_dir=cache_dir
 )
-pipe.text_encoder.to(torch.float16)
-pipe.controlnet.to(torch.float16)
 pipe.to("cuda")
 pipeline_load_time = time.time() - pipeline_load_start
 logger.info(f"Pipeline loading took {pipeline_load_time:.4f} seconds")
