@@ -90,7 +90,7 @@ logger.info(f"Torch dtype: {torch_dtype}")
 logger.info("Starting image download...")
 image_load_start = time.time()
 image = load_image(
-    "https://hf.co/datasets/huggingface/documentation-images/resolve/main/diffusers/input_image_vermeer.png"
+    "https://huggingface.co/datasets/hf-internal-testing/diffusers-images/resolve/main/sd_controlnet/bird_canny.png"
 )
 image_load_time = time.time() - image_load_start
 logger.info(f"Image loading took {image_load_time:.4f} seconds")
@@ -149,10 +149,13 @@ logger.info("Starting image generation...")
 generation_start = time.time()
 generator = torch.Generator(device="cuda").manual_seed(24)
 image = pipe(
-    "futuristic-looking woman",
-    control_image=canny_image,
+    "A bird in space",
+    control_image=image,
     controlnet_conditioning_scale=0.85,
     generator=generator,
+    height=1024, 
+    width=768,
+    num_inference_steps=60,
 ).images[0]
 generation_time = time.time() - generation_start
 logger.info(f"Image generation took {generation_time:.4f} seconds")
