@@ -1,4 +1,3 @@
-
 import numpy as np
 import random
 import os
@@ -8,8 +7,17 @@ import torch
 from huggingface_hub import login
 import cv2
 from PIL import Image
+
+# Set cache directories
+# os.environ["HF_HOME"] = "./cache"
+# os.environ["HUGGINGFACE_HUB_CACHE"] = "hub"
+# os.environ["TRANSFORMERS_CACHE"] = "transformers"
+# os.environ["HF_DATASETS_CACHE"] = "datasets"
+
 login(os.getenv("HF_TOKEN"))
 device = "cuda"
+# Set cache directory
+cache_dir = "./cache"
 model_repo_id = "stabilityai/stable-diffusion-3.5-large"
 controlnet_repo_id = "stabilityai/stable-diffusion-3.5-large-controlnet-canny"
 torch_dtype = torch.bfloat16
@@ -27,9 +35,16 @@ np_image = np.concatenate([np_image, np_image, np_image], axis=2)
 canny_image = Image.fromarray(np_image)
 
 # load control net and stable diffusion v1-5
-controlnet = ControlNetModel.from_pretrained(controlnet_repo_id, torch_dtype=torch_dtype)
+controlnet = ControlNetModel.from_pretrained(
+    controlnet_repo_id, 
+    torch_dtype=torch_dtype,
+    cache_dir=cache_dir
+)
 pipe = StableDiffusionControlNetImg2ImgPipeline.from_pretrained(
-    model_repo_id, controlnet=controlnet, torch_dtype=torch_dtype
+    model_repo_id, 
+    controlnet=controlnet, 
+    torch_dtype=torch_dtype,
+    cache_dir=cache_dir
 )
 
 # speed up diffusion process with faster scheduler and memory optimization
