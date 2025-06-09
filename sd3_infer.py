@@ -415,7 +415,7 @@ CLIPL_CONFIG = {
 
 
 class ClipL:
-    def __init__(self, model_folder: str):
+    def __init__(self, model_folder: str, device: str = "cpu"):
         init_start = time.time()
         logger.info("Initializing ClipL...")
         
@@ -429,7 +429,7 @@ class ClipL:
             self.model = SDClipModel(
                 layer="hidden",
                 layer_idx=-2,
-                device="cpu",
+                device=device,
                 dtype=torch.float32,
                 layer_norm_hidden_state=False,
                 return_projected_pooled=False,
@@ -438,7 +438,7 @@ class ClipL:
             logger.info(f"  Created SDClipModel in {time.time() - model_create_start:.2f}s")
             
             load_start = time.time()
-            load_into(f, self.model.transformer, "", "cpu", torch.float32)
+            load_into(f, self.model.transformer, "", device, torch.float32)
             logger.info(f"  Loaded weights in {time.time() - load_start:.2f}s")
         
         logger.info(f"ClipL initialized in {time.time() - init_start:.2f}s")
@@ -560,7 +560,7 @@ class SD3:
 
 
 class VAE:
-    def __init__(self, model, dtype: torch.dtype = torch.float16):
+    def __init__(self, model, dtype: torch.dtype = torch.float16, device: str = "cuda"):
         init_start = time.time()
         logger.info(f"Initializing VAE from {os.path.basename(model)}...")
         
@@ -569,7 +569,7 @@ class VAE:
             logger.info(f"  Opened VAE model file in {time.time() - file_open_start:.2f}s")
             
             model_create_start = time.time()
-            self.model = SDVAE(device="cpu", dtype=dtype).eval().cpu()
+            self.model = SDVAE(device=device, dtype=dtype).eval()
             logger.info(f"  Created SDVAE model in {time.time() - model_create_start:.2f}s")
             
             prefix_check_start = time.time()
@@ -579,7 +579,7 @@ class VAE:
             logger.info(f"  Checked prefix in {time.time() - prefix_check_start:.2f}s")
             
             load_start = time.time()
-            load_into(f, self.model, prefix, "cpu", dtype)
+            load_into(f, self.model, prefix, device, dtype)
             logger.info(f"  Loaded VAE weights in {time.time() - load_start:.2f}s")
         
         logger.info(f"VAE initialized in {time.time() - init_start:.2f}s")
@@ -670,7 +670,7 @@ class SD3Inferencer:
             
             clipl_start = time.time()
             logger.info("Loading OpenAI CLIP L...")
-            self.clip_l = ClipL(model_folder)
+            self.clip_l = ClipL(model_folder, text_encoder_device)
             logger.info(f"CLIP-L total load time: {time.time() - clipl_start:.2f}s")
             
             clipg_start = time.time()
@@ -685,7 +685,7 @@ class SD3Inferencer:
         
         vae_start = time.time()
         logger.info("Loading VAE model...")
-        self.vae = VAE(vae or model)
+        self.vae = VAE(vae or model, device="cuda")
         logger.info(f"VAE total load time: {time.time() - vae_start:.2f}s")
         
         logger.info(f"All models loaded in {time.time() - load_start:.2f}s")
@@ -782,8 +782,7 @@ class SD3Inferencer:
         
         prepare_start = time.time()
         latent = latent.half().cuda()
-        self.sd3.model = self.sd3.model.cuda()
-        logger.info(f"  Moved to CUDA in {time.time() - prepare_start:.2f}s")
+        logger.info(f"  Prepared latent in {time.time() - prepare_start:.2f}s")
         
         noise_start = time.time()
         noise = self.get_noise(seed, latent).cuda()
@@ -830,8 +829,7 @@ class SD3Inferencer:
         
         postprocess_start = time.time()
         latent = SD3LatentFormat().process_out(latent)
-        self.sd3.model = self.sd3.model.cpu()
-        logger.info(f"  Post-processed and moved to CPU in {time.time() - postprocess_start:.2f}s")
+        logger.info(f"  Post-processed latent in {time.time() - postprocess_start:.2f}s")
         
         logger.info(f"Total sampling time: {time.time() - sampling_start:.2f}s")
         return latent
@@ -859,16 +857,11 @@ class SD3Inferencer:
         
         move_start = time.time()
         image_torch = image_torch.cuda()
-        self.vae.model = self.vae.model.cuda()
-        logger.info(f"  Moved to CUDA in {time.time() - move_start:.2f}s")
+        logger.info(f"  Moved image to CUDA in {time.time() - move_start:.2f}s")
         
         encode_vae_start = time.time()
-        latent = self.vae.model.encode(image_torch).cpu()
+        latent = self.vae.model.encode(image_torch)
         logger.info(f"  VAE encoding in {time.time() - encode_vae_start:.2f}s")
-        
-        move_back_start = time.time()
-        self.vae.model = self.vae.model.cpu()
-        logger.info(f"  Moved back to CPU in {time.time() - move_back_start:.2f}s")
         
         logger.info(f"Total VAE encoding time: {time.time() - encode_start:.2f}s")
         return latent
@@ -884,17 +877,12 @@ class SD3Inferencer:
         
         move_start = time.time()
         latent = latent.cuda()
-        self.vae.model = self.vae.model.cuda()
-        logger.info(f"  Moved to CUDA in {time.time() - move_start:.2f}s")
+        logger.info(f"  Moved latent to CUDA in {time.time() - move_start:.2f}s")
         
         decode_vae_start = time.time()
         image = self.vae.model.decode(latent)
         image = image.float()
         logger.info(f"  VAE decoding in {time.time() - decode_vae_start:.2f}s")
-        
-        move_back_start = time.time()
-        self.vae.model = self.vae.model.cpu()
-        logger.info(f"  Moved back to CPU in {time.time() - move_back_start:.2f}s")
         
         postprocess_start = time.time()
         image = torch.clamp((image + 1.0) / 2.0, min=0.0, max=1.0)[0]
@@ -976,8 +964,7 @@ class SD3Inferencer:
             logger.info(f"Loading init image: {init_image}")
             latent = self._image_to_latent(init_image, width, height)
         else:
-            latent = self.get_empty_latent(1, width, height, seed, "cpu")
-            latent = latent.cuda()
+            latent = self.get_empty_latent(1, width, height, seed, "cuda")
         logger.info(f"  Latent preparation time: {time.time() - latent_start:.2f}s")
         
         # Prepare controlnet condition
@@ -1409,7 +1396,7 @@ def main(
     skip_layer_cfg=False,
     verbose=False,
     model_folder=MODEL_FOLDER,
-    text_encoder_device="cpu",
+    text_encoder_device="cuda",
     batch=None,
     **kwargs,
 ):
