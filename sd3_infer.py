@@ -1629,6 +1629,13 @@ def main(
         
         logger.info(f"Preprocessing completed in {time.time() - preprocess_start:.2f}s")
 
+    # Auto-calculate dimensions if not specified and raw image is provided
+    if (width == WIDTH and height == HEIGHT) and raw_image_input:
+        temp_img = Image.open(raw_image_input)
+        input_width, input_height = temp_img.size
+        width, height = calculate_optimal_dimensions(input_width, input_height)
+        logger.info(f"Auto-detected dimensions from raw input {input_width}x{input_height} -> {width}x{height}")
+    
     generation_start = time.time()
     inferencer.gen_image(
         prompts,
