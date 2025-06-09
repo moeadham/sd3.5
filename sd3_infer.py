@@ -927,31 +927,36 @@ class SD3Inferencer:
         
         # Resize while maintaining aspect ratio, then center crop
         orig_width, orig_height = image_data.size
-        aspect_ratio = orig_width / orig_height
-        target_aspect = width / height
         
-        # Log if aspect ratios don't match
-        if abs(aspect_ratio - target_aspect) > 0.01:
-            logger.info(f"  Control image aspect ratio {orig_width}x{orig_height} ({aspect_ratio:.2f}) differs from target {width}x{height} ({target_aspect:.2f}), will scale and crop")
-        
-        if aspect_ratio > target_aspect:
-            # Image is wider than target - scale by height and crop width
-            new_height = height
-            new_width = int(height * aspect_ratio)
-            image_data = image_data.resize((new_width, new_height), Image.LANCZOS)
-            # Center crop the width
-            left = (new_width - width) // 2
-            image_data = image_data.crop((left, 0, left + width, height))
-            logger.info(f"  Scaled to {new_width}x{new_height} and cropped width to {width}x{height}")
+        # Skip resize if already at target dimensions
+        if orig_width == width and orig_height == height:
+            logger.info(f"  Control image already at target dimensions {width}x{height}, skipping resize")
         else:
-            # Image is taller than target - scale by width and crop height
-            new_width = width
-            new_height = int(width / aspect_ratio)
-            image_data = image_data.resize((new_width, new_height), Image.LANCZOS)
-            # Center crop the height
-            top = (new_height - height) // 2
-            image_data = image_data.crop((0, top, width, top + height))
-            logger.info(f"  Scaled to {new_width}x{new_height} and cropped height to {width}x{height}")
+            aspect_ratio = orig_width / orig_height
+            target_aspect = width / height
+            
+            # Log if aspect ratios don't match
+            if abs(aspect_ratio - target_aspect) > 0.01:
+                logger.info(f"  Control image aspect ratio {orig_width}x{orig_height} ({aspect_ratio:.2f}) differs from target {width}x{height} ({target_aspect:.2f}), will scale and crop")
+            
+            if aspect_ratio > target_aspect:
+                # Image is wider than target - scale by height and crop width
+                new_height = height
+                new_width = int(height * aspect_ratio)
+                image_data = image_data.resize((new_width, new_height), Image.LANCZOS)
+                # Center crop the width
+                left = (new_width - width) // 2
+                image_data = image_data.crop((left, 0, left + width, height))
+                logger.info(f"  Scaled to {new_width}x{new_height} and cropped width to {width}x{height}")
+            else:
+                # Image is taller than target - scale by width and crop height
+                new_width = width
+                new_height = int(width / aspect_ratio)
+                image_data = image_data.resize((new_width, new_height), Image.LANCZOS)
+                # Center crop the height
+                top = (new_height - height) // 2
+                image_data = image_data.crop((0, top, width, top + height))
+                logger.info(f"  Scaled to {new_width}x{new_height} and cropped height to {width}x{height}")
         
         latent = self.vae_encode(image_data, using_2b_controlnet, controlnet_type)
         latent = SD3LatentFormat().process_in(latent)
