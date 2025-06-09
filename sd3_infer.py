@@ -245,7 +245,7 @@ def preprocess_canny(img, canny_low_threshold=100, canny_high_threshold=200):
     return edges_rgb
 
 
-def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ensemble_size=4):
+def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ensemble_size=4, depthfm_cache=None):
     """Convert PIL image to depth map using DepthFM.
     
     Args:
@@ -267,20 +267,35 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     if not depthfm_model_path:
         raise ValueError("depthfm_model_path must be provided for depth preprocessing")
     
-    # Initialize DepthFM model
-    model_load_start = time.time()
-    logger.info(f"Loading DepthFM model from {depthfm_model_path}")
+    # Initialize DepthFM model (use cache if available)
+    if depthfm_cache is not None and depthfm_model_path in depthfm_cache:
+        logger.info(f"Using cached DepthFM model from {depthfm_model_path}")
+        depthfm_model = depthfm_cache[depthfm_model_path]
+    else:
+        model_load_start = time.time()
+        logger.info(f"Loading DepthFM model from {depthfm_model_path}")
+        
+        depthfm_model = DepthFM(ckpt_path=depthfm_model_path)
+        logger.info(f"  DepthFM model loaded in {time.time() - model_load_start:.2f}s")
+        
+        if depthfm_cache is not None:
+            depthfm_cache[depthfm_model_path] = depthfm_model
     
-    depthfm_model = DepthFM(ckpt_path=depthfm_model_path)
-    logger.info(f"  DepthFM model loaded in {time.time() - model_load_start:.2f}s")
-    
-    # Move model to GPU if available
-    device_start = time.time()
+    # Move model to GPU if available and not already there
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    logger.info(f"  Moving DepthFM model to {device}")
-    depthfm_model = depthfm_model.to(device)
-    depthfm_model.eval()
-    logger.info(f"  Model moved to {device} in {time.time() - device_start:.2f}s")
+    if next(depthfm_model.parameters()).device != device:
+        device_start = time.time()
+        logger.info(f"  Moving DepthFM model to {device}")
+        depthfm_model = depthfm_model.to(device)
+        depthfm_model.eval()
+        logger.info(f"  Model moved to {device} in {time.time() - device_start:.2f}s")
+        
+        # Update cache with GPU model
+        if depthfm_cache is not None and depthfm_model_path in depthfm_cache:
+            depthfm_cache[depthfm_model_path] = depthfm_model
+    else:
+        logger.info(f"  DepthFM model already on {device}")
+        depthfm_model.eval()
     
     # Convert PIL to tensor
     tensor_start = time.time()
@@ -633,6 +648,7 @@ class SD3Inferencer:
 
     def __init__(self):
         self.verbose = False
+        self._depthfm_cache = {}  # Cache for DepthFM models
 
     def print(self, txt):
         if self.verbose:
@@ -1116,7 +1132,7 @@ class SD3Inferencer:
                 # Use the preprocessed image as controlnet condition
                 controlnet_cond_image = control_image_path
             elif preprocess_type == 'depth':
-                processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size)
+                processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size, self._depthfm_cache)
                 # Save preprocessed image to the same directory as output
                 if output_path:
                     # Get the output directory and filename
