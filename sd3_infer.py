@@ -259,6 +259,10 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     """
     preprocess_start = time.time()
     logger.info(f"Preprocessing image with DepthFM (steps: {depth_num_steps}, ensemble: {depth_ensemble_size})...")
+    if target_width is not None and target_height is not None:
+        logger.info(f"  Target output dimensions: {target_width}x{target_height}")
+    else:
+        logger.info(f"  Target output dimensions: Original image dimensions")
     
     try:
         from depthfm.dfm import DepthFM
@@ -304,6 +308,7 @@ def preprocess_depth(img, depthfm_model_path=None, depth_num_steps=2, depth_ense
     tensor_start = time.time()
     img_tensor = F.to_tensor(img).unsqueeze(0)  # Add batch dimension
     c, h, w = img_tensor.shape[1:]
+    logger.info(f"  Input image dimensions: {w}x{h}")
     
     # Move input to same device as model
     img_tensor = img_tensor.to(device)
@@ -1200,9 +1205,12 @@ class SD3Inferencer:
         if raw_image_input and preprocess_type:
             preprocess_start = time.time()
             logger.info(f"  Preprocessing raw image: {raw_image_input} with {preprocess_type}")
+            logger.info(f"  Target dimensions for preprocessing: {width}x{height}")
             
             # Load raw image
             raw_img = Image.open(raw_image_input).convert("RGB")
+            raw_width, raw_height = raw_img.size
+            logger.info(f"  Raw image dimensions: {raw_width}x{raw_height}")
             
             # Apply preprocessing
             if preprocess_type == 'canny':
@@ -1227,6 +1235,8 @@ class SD3Inferencer:
                 controlnet_cond_image = control_image_path
             elif preprocess_type == 'depth':
                 processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size, self._depthfm_cache, width, height)
+                processed_width, processed_height = processed_img.size
+                logger.info(f"  Processed depth map dimensions: {processed_width}x{processed_height}")
                 # Save preprocessed image to the same directory as output
                 if output_path:
                     # Get the output directory and filename
@@ -1609,13 +1619,25 @@ def main(
     logger.info(f"Output directory created: {out_dir}")
     logger.info(f"Output preparation in {time.time() - output_prep_start:.2f}s")
     
-    # Handle raw image preprocessing in single mode (after output dir is created)
+    # Auto-calculate dimensions if not specified and raw image is provided
+    if (width == WIDTH and height == HEIGHT) and raw_image_input:
+        dim_calc_start = time.time()
+        temp_img = Image.open(raw_image_input)
+        input_width, input_height = temp_img.size
+        width, height = calculate_optimal_dimensions(input_width, input_height)
+        logger.info(f"Auto-calculated dimensions from raw input {input_width}x{input_height} -> {width}x{height}")
+        logger.info(f"Dimension calculation in {time.time() - dim_calc_start:.2f}s")
+    
+    # Handle raw image preprocessing in single mode (after output dir is created and dimensions calculated)
     if raw_image_input and preprocess_type:
         preprocess_start = time.time()
         logger.info(f"Preprocessing raw image: {raw_image_input} with {preprocess_type}")
+        logger.info(f"  Target dimensions for preprocessing: {width}x{height}")
         
         # Load raw image
         raw_img = Image.open(raw_image_input).convert("RGB")
+        raw_width, raw_height = raw_img.size
+        logger.info(f"  Raw image dimensions: {raw_width}x{raw_height}")
         
         # Apply preprocessing
         if preprocess_type == 'canny':
@@ -1628,6 +1650,8 @@ def main(
             controlnet_cond_image = control_image_path
         elif preprocess_type == 'depth':
             processed_img = preprocess_depth(raw_img, depthfm_model_path, depth_num_steps, depth_ensemble_size, None, width, height)
+            processed_width, processed_height = processed_img.size
+            logger.info(f"  Processed depth map dimensions: {processed_width}x{processed_height}")
             # Save preprocessed image to output directory with _control suffix
             control_image_path = os.path.join(out_dir, "000000_control.png")
             processed_img.save(control_image_path)
@@ -1638,13 +1662,6 @@ def main(
             logger.warning(f"Unknown preprocess_type: {preprocess_type}")
         
         logger.info(f"Preprocessing completed in {time.time() - preprocess_start:.2f}s")
-
-    # Auto-calculate dimensions if not specified and raw image is provided
-    if (width == WIDTH and height == HEIGHT) and raw_image_input:
-        temp_img = Image.open(raw_image_input)
-        input_width, input_height = temp_img.size
-        width, height = calculate_optimal_dimensions(input_width, input_height)
-        logger.info(f"Auto-detected dimensions from raw input {input_width}x{input_height} -> {width}x{height}")
     
     generation_start = time.time()
     inferencer.gen_image(
