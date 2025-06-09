@@ -143,24 +143,14 @@ logger.info(f"Pipeline loading took {pipeline_load_time:.4f} seconds")
 total_model_load_time = controlnet_load_time + pipeline_load_time
 logger.info(f"Total model loading time: {total_model_load_time:.4f} seconds")
 
-# speed up diffusion process with faster scheduler and memory optimization
-logger.info("Setting up scheduler...")
-scheduler_start = time.time()
-pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
-scheduler_time = time.time() - scheduler_start
-logger.info(f"Scheduler setup took {scheduler_time:.4f} seconds")
-
 # generate image
 logger.info("Starting image generation...")
 generation_start = time.time()
-generator = torch.manual_seed(0)
 image = pipe(
     "futuristic-looking woman",
-    num_inference_steps=20,
-    generator=generator,
     image=image,
     control_image=canny_image,
-    controlnet_conditioning_scale=0.7
+    controlnet_conditioning_scale=0.85,
 ).images[0]
 generation_time = time.time() - generation_start
 logger.info(f"Image generation took {generation_time:.4f} seconds")
