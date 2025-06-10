@@ -91,16 +91,6 @@ logger.info(f"ControlNet repo: {controlnet_repo_id}")
 logger.info(f"Cache directory: {cache_dir}")
 logger.info(f"Torch dtype: {torch_dtype}")
 
-
-
-logger.info("Converting image to numpy array...")
-np_conversion_start = time.time()
-np_image = np.array(image)
-np_conversion_time = time.time() - np_conversion_start
-logger.info(f"Numpy conversion took {np_conversion_time:.4f} seconds")
-
-
-
 logger.info("Loading Depth estimator...")
 depth_estimator_load_start = time.time()
 depth_estimator = DPTForDepthEstimation.from_pretrained("Intel/dpt-hybrid-midas").to("cuda")
