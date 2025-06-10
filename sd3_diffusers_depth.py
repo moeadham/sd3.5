@@ -84,7 +84,7 @@ logger.info(f"Using device: {device}")
 cache_dir = "./cache"
 model_repo_id = "stabilityai/stable-diffusion-3-medium-diffusers"#"stabilityai/stable-diffusion-3.5-large"
 controlnet_repo_id = "InstantX/SD3-Controlnet-Depth"#"stabilityai/stable-diffusion-3.5-large-controlnet-canny"
-torch_dtype = torch.bfloat16
+torch_dtype = torch.float16
 
 logger.info(f"Model repo: {model_repo_id}")
 logger.info(f"ControlNet repo: {controlnet_repo_id}")
@@ -155,6 +155,8 @@ pipe = StableDiffusion3ControlNetPipeline.from_pretrained(
     torch_dtype=torch_dtype,
     cache_dir=cache_dir
 )
+pipe.text_encoder.to(torch_dtype)
+pipe.controlnet.to(torch_dtype)
 pipe.to("cuda")
 pipeline_load_time = time.time() - pipeline_load_start
 logger.info(f"Pipeline loading took {pipeline_load_time:.4f} seconds")
@@ -191,7 +193,7 @@ logger.info(f"Total execution time: {total_execution_time:.4f} seconds")
 # Summary of major phases
 logger.info("=== TIMING SUMMARY ===")
 logger.info(f"Imports: {total_import_time:.4f}s")
-logger.info(f"Image loading & processing: {image_load_time + np_conversion_time + depth_time:.4f}s")
+logger.info(f"Image loading & processing: {image_load_time + depth_time:.4f}s")
 logger.info(f"Model loading: {total_model_load_time:.4f}s")
 logger.info(f"Generation: {generation_time:.4f}s")
 logger.info(f"Total: {total_execution_time:.4f}s")
