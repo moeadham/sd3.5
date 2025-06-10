@@ -30,7 +30,6 @@ import_start = time.time()
 from diffusers import StableDiffusion3ControlNetPipeline
 from diffusers.models import SD3ControlNetModel, SD3MultiControlNetModel
 from diffusers import BitsAndBytesConfig, SD3Transformer2DModel
-from diffusers import EulerDiscreteScheduler
 import_time = time.time() - import_start
 logger.info(f"diffusers import took {import_time:.4f} seconds")
 
@@ -72,6 +71,7 @@ os.environ["HF_HOME"] = "./cache"
 os.environ["HUGGINGFACE_HUB_CACHE"] = "hub"
 os.environ["TRANSFORMERS_CACHE"] = "transformers"
 os.environ["HF_DATASETS_CACHE"] = "datasets"
+os.environ["HF_HUB_OFFLINE"] = "1"  # Force offline mode
 
 logger.info("Starting HuggingFace login...")
 login_start = time.time()
@@ -102,6 +102,7 @@ depth_estimator = DPTForDepthEstimation.from_pretrained(
     "Intel/dpt-hybrid-midas",
     cache_dir=cache_dir,
     torch_dtype=torch_dtype,
+    local_files_only=True
 ).to("cuda")
 depth_estimator_load_time = time.time() - depth_estimator_load_start
 logger.info(f"Depth estimator loading took {depth_estimator_load_time:.4f} seconds")
@@ -112,7 +113,8 @@ feature_extractor = DPTImageProcessor.from_pretrained(
     "Intel/dpt-hybrid-midas",
     cache_dir=cache_dir,
     torch_dtype=torch_dtype,
-).to("cuda")
+    local_files_only=True
+)
 feature_extractor_load_time = time.time() - feature_extractor_load_start
 logger.info(f"Depth feature extractor loading took {feature_extractor_load_time:.4f} seconds")
 
@@ -173,28 +175,23 @@ model_nf4 = SD3Transformer2DModel.from_pretrained(
     quantization_config=nf4_config,
     torch_dtype=torch.bfloat16,
     cache_dir=cache_dir,
-).to("cuda")
+    device_map="auto",
+)
 pipe = StableDiffusion3ControlNetPipeline.from_pretrained(
     model_repo_id, 
     controlnet=controlnet, 
     torch_dtype=torch_dtype,
     cache_dir=cache_dir,
     transformer=model_nf4,
+    device_map="auto",
 )
 # pipe.text_encoder.to(torch_dtype)
 # pipe.controlnet.to(torch_dtype)
-pipe.to("cuda")
-pipe.text_encoder = pipe.text_encoder.to("cuda")
-pipe.text_encoder_2 = pipe.text_encoder_2.to("cuda")
-pipe.text_encoder_3 = pipe.text_encoder_3.to("cuda")
-pipe.vae = pipe.vae.to("cuda")
-
-# Set Euler scheduler as recommended for SD3.5 ControlNet
-# logger.info("Setting Euler scheduler...")
-# scheduler_start = time.time()
-# pipe.scheduler = EulerDiscreteScheduler.from_config(pipe.scheduler.config)
-# scheduler_time = time.time() - scheduler_start
-# logger.info(f"Scheduler setup took {scheduler_time:.4f} seconds")
+# pipe.to("cuda")
+# pipe.text_encoder = pipe.text_encoder.to("cuda")
+# pipe.text_encoder_2 = pipe.text_encoder_2.to("cuda")
+# pipe.text_encoder_3 = pipe.text_encoder_3.to("cuda")
+# pipe.vae = pipe.vae.to("cuda")
 
 pipeline_load_time = time.time() - pipeline_load_start
 logger.info(f"Pipeline loading took {pipeline_load_time:.4f} seconds")
