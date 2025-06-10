@@ -30,6 +30,7 @@ import_start = time.time()
 from diffusers import StableDiffusion3ControlNetPipeline
 from diffusers.models import SD3ControlNetModel, SD3MultiControlNetModel
 from diffusers import BitsAndBytesConfig, SD3Transformer2DModel
+from diffusers import EulerDiscreteScheduler
 import_time = time.time() - import_start
 logger.info(f"diffusers import took {import_time:.4f} seconds")
 
@@ -175,6 +176,14 @@ pipe = StableDiffusion3ControlNetPipeline.from_pretrained(
 pipe.text_encoder.to(torch_dtype)
 pipe.controlnet.to(torch_dtype)
 pipe.to("cuda")
+
+# Set Euler scheduler as recommended for SD3.5 ControlNet
+logger.info("Setting Euler scheduler...")
+scheduler_start = time.time()
+pipe.scheduler = EulerDiscreteScheduler.from_config(pipe.scheduler.config)
+scheduler_time = time.time() - scheduler_start
+logger.info(f"Scheduler setup took {scheduler_time:.4f} seconds")
+
 pipeline_load_time = time.time() - pipeline_load_start
 logger.info(f"Pipeline loading took {pipeline_load_time:.4f} seconds")
 
@@ -193,8 +202,8 @@ image = pipe(prompt,
     #generator=generator,
     height=1024, 
     width=1024,
-    #num_inference_steps=60,
-    #guidance_scale=5.0,
+    num_inference_steps=60,  # SD3.5 ControlNet recommended
+    guidance_scale=3.5,      # SD3.5 ControlNet recommended (lower than default)
     #control_guidance_start=0.0,
     #control_guidance_end=1.0,
 ).images[0]
