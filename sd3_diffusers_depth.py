@@ -106,8 +106,21 @@ np_image = np.array(image)
 np_conversion_time = time.time() - np_conversion_start
 logger.info(f"Numpy conversion took {np_conversion_time:.4f} seconds")
 
-# get canny image
-logger.info("Generating Depth map detection...")
+
+
+logger.info("Loading Depth estimator...")
+depth_estimator_load_start = time.time()
+depth_estimator = DPTForDepthEstimation.from_pretrained("Intel/dpt-hybrid-midas").to("cuda")
+depth_estimator_load_time = time.time() - depth_estimator_load_start
+logger.info(f"Depth estimator loading took {depth_estimator_load_time:.4f} seconds")
+
+logger.info("Loading Depth feature extractor...")
+feature_extractor_load_start = time.time()
+feature_extractor = DPTImageProcessor.from_pretrained("Intel/dpt-hybrid-midas")
+feature_extractor_load_time = time.time() - feature_extractor_load_start
+logger.info(f"Depth feature extractor loading took {feature_extractor_load_time:.4f} seconds")
+
+logger.info("Generating Depth map...")
 depth_start = time.time()
 depth_image = feature_extractor(images=image, return_tensors="pt").pixel_values.to("cuda")
 with torch.no_grad(), torch.autocast("cuda"):
