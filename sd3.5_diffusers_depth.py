@@ -30,6 +30,10 @@ import_start = time.time()
 from diffusers import StableDiffusion3ControlNetPipeline
 from diffusers.models import SD3ControlNetModel, SD3MultiControlNetModel
 from diffusers import BitsAndBytesConfig, SD3Transformer2DModel
+import diffusers
+import transformers
+transformers.utils.logging.set_verbosity_info()
+diffusers.utils.logging.set_verbosity_debug()
 import_time = time.time() - import_start
 logger.info(f"diffusers import took {import_time:.4f} seconds")
 
@@ -73,11 +77,11 @@ os.environ["TRANSFORMERS_CACHE"] = "transformers"
 os.environ["HF_DATASETS_CACHE"] = "datasets"
 os.environ["HF_HUB_OFFLINE"] = "1"  # Force offline mode
 
-logger.info("Starting HuggingFace login...")
-login_start = time.time()
-login(os.getenv("HF_TOKEN"))
-login_time = time.time() - login_start
-logger.info(f"HuggingFace login took {login_time:.4f} seconds")
+#logger.info("Starting HuggingFace login...")
+#login_start = time.time()
+#login(os.getenv("HF_TOKEN"))
+#login_time = time.time() - login_start
+#logger.info(f"HuggingFace login took {login_time:.4f} seconds")
 
 device = "cuda"
 logger.info(f"Using device: {device}")
@@ -102,7 +106,7 @@ depth_estimator = DPTForDepthEstimation.from_pretrained(
     "Intel/dpt-hybrid-midas",
     cache_dir=cache_dir,
     torch_dtype=torch_dtype,
-    local_files_only=True
+    local_files_only=True,
 ).to("cuda")
 depth_estimator_load_time = time.time() - depth_estimator_load_start
 logger.info(f"Depth estimator loading took {depth_estimator_load_time:.4f} seconds")
@@ -157,41 +161,44 @@ controlnet_load_start = time.time()
 controlnet = SD3ControlNetModel.from_pretrained(
     controlnet_repo_id, 
     torch_dtype=torch_dtype,
-    local_files_only=True
+    local_files_only=True,
 ).to("cuda")
 controlnet_load_time = time.time() - controlnet_load_start
 logger.info(f"ControlNet loading took {controlnet_load_time:.4f} seconds")
 
 logger.info("Loading Stable Diffusion pipeline...")
 pipeline_load_start = time.time()
-nf4_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.bfloat16
-)
-model_nf4 = SD3Transformer2DModel.from_pretrained(
-    model_repo_id,
-    subfolder="transformer",
-    quantization_config=nf4_config,
-    torch_dtype=torch.bfloat16,
-    cache_dir=cache_dir,
-    device_map="auto",
-)
+
+## For 4bit quantization
+# nf4_config = BitsAndBytesConfig(
+#     load_in_4bit=True,
+#     bnb_4bit_quant_type="nf4",
+#     bnb_4bit_compute_dtype=torch.bfloat16
+# )
+# model_nf4 = SD3Transformer2DModel.from_pretrained(
+#     model_repo_id,
+#     subfolder="transformer",
+#     quantization_config=nf4_config,
+#     torch_dtype=torch.bfloat16,
+#     cache_dir=cache_dir,
+#     local_files_only=True,
+# )
 pipe = StableDiffusion3ControlNetPipeline.from_pretrained(
     model_repo_id, 
     controlnet=controlnet, 
     torch_dtype=torch_dtype,
     cache_dir=cache_dir,
-    transformer=model_nf4,
-    device_map="auto",
+    #transformer=model_nf4, # If you want to use 4bit quantization
+    local_files_only=True,
+    low_cpu_mem_usage=True,
 )
-# pipe.text_encoder.to(torch_dtype)
-# pipe.controlnet.to(torch_dtype)
-# pipe.to("cuda")
-# pipe.text_encoder = pipe.text_encoder.to("cuda")
-# pipe.text_encoder_2 = pipe.text_encoder_2.to("cuda")
-# pipe.text_encoder_3 = pipe.text_encoder_3.to("cuda")
-# pipe.vae = pipe.vae.to("cuda")
+pipe.controlnet.to(torch_dtype)
+pipe.text_encoder = pipe.text_encoder.to("cuda")
+pipe.text_encoder_2 = pipe.text_encoder_2.to("cuda")
+pipe.text_encoder_3 = pipe.text_encoder_3.to("cuda")
+pipe.vae = pipe.vae.to("cuda")
+pipe.to("cuda")
+
 
 pipeline_load_time = time.time() - pipeline_load_start
 logger.info(f"Pipeline loading took {pipeline_load_time:.4f} seconds")
@@ -203,7 +210,7 @@ logger.info(f"Total model loading time: {total_model_load_time:.4f} seconds")
 logger.info("Starting image generation...")
 generation_start = time.time()
 #generator = torch.Generator(device="cuda").manual_seed(24)
-prompt = "studio ghibli style cartoon"
+prompt = "studio ghibli style"
 image = pipe(prompt,
     negative_prompt="low quality, incomplete, blurred",
     control_image=depth_image,
