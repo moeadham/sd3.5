@@ -130,6 +130,7 @@ depth_map = (depth_map - depth_min) / (depth_max - depth_min)
 depth_image = torch.cat([depth_map] * 3, dim=1)
 depth_image = depth_image.permute(0, 2, 3, 1).cpu().numpy()[0]
 depth_image = Image.fromarray((depth_image * 255.0).clip(0, 255).astype(np.uint8))
+os.makedirs("outputs/diffusers", exist_ok=True)
 depth_image.save("outputs/diffusers/diffusers_depth_control.png")
 depth_time = time.time() - depth_start
 logger.info(f"Depth map generation took {depth_time:.4f} seconds")
