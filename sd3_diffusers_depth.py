@@ -91,14 +91,7 @@ logger.info(f"ControlNet repo: {controlnet_repo_id}")
 logger.info(f"Cache directory: {cache_dir}")
 logger.info(f"Torch dtype: {torch_dtype}")
 
-# download an image
-logger.info("Starting image download...")
-image_load_start = time.time()
-image = load_image(
-    "./inputs/square.png"
-)
-image_load_time = time.time() - image_load_start
-logger.info(f"Image loading took {image_load_time:.4f} seconds")
+
 
 logger.info("Converting image to numpy array...")
 np_conversion_start = time.time()
@@ -120,6 +113,15 @@ feature_extractor = DPTImageProcessor.from_pretrained("Intel/dpt-hybrid-midas")
 feature_extractor_load_time = time.time() - feature_extractor_load_start
 logger.info(f"Depth feature extractor loading took {feature_extractor_load_time:.4f} seconds")
 
+# download an image
+logger.info("Starting image download...")
+image_load_start = time.time()
+image = load_image(
+    "./inputs/square.png"
+)
+image_load_time = time.time() - image_load_start
+logger.info(f"Image loading took {image_load_time:.4f} seconds")
+
 logger.info("Generating Depth map...")
 depth_start = time.time()
 depth_image = feature_extractor(images=image, return_tensors="pt").pixel_values.to("cuda")
@@ -136,8 +138,8 @@ depth_min = torch.amin(depth_map, dim=[1, 2, 3], keepdim=True)
 depth_max = torch.amax(depth_map, dim=[1, 2, 3], keepdim=True)
 depth_map = (depth_map - depth_min) / (depth_max - depth_min)
 depth_image = torch.cat([depth_map] * 3, dim=1)
-depth_image = image.permute(0, 2, 3, 1).cpu().numpy()[0]
-depth_image = Image.fromarray((image * 255.0).clip(0, 255).astype(np.uint8))
+depth_image = depth_image.permute(0, 2, 3, 1).cpu().numpy()[0]
+depth_image = Image.fromarray((depth_image * 255.0).clip(0, 255).astype(np.uint8))
 depth_image.save("outputs/diffusers/diffusers_depth_control.png")
 depth_time = time.time() - depth_start
 logger.info(f"Depth map generation took {depth_time:.4f} seconds")
