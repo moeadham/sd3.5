@@ -88,7 +88,6 @@ model_repo_id = "stabilityai/stable-diffusion-3.5-large"
 ## need to convert to diffusers format. 
 ## https://github.com/huggingface/diffusers/blob/6c7fad7ec8b2417c92326804e1751658874fd43b/scripts/convert_sd3_controlnet_to_diffusers.py#L2
 #python scripts/convert_sd3_controlnet_to_diffusers.py --checkpoint_path "../sd3.5/models/sd3.5_large_controlnet_depth.safetensors" --output_path ../sd3.5/models/sd3.5_large_controlnet_depth_diffusers
-
 controlnet_repo_id = "/workspace/sd3.5/models/sd3.5_large_controlnet_depth_diffusers"
 torch_dtype = torch.bfloat16
 
@@ -105,7 +104,11 @@ logger.info(f"Depth estimator loading took {depth_estimator_load_time:.4f} secon
 
 logger.info("Loading Depth feature extractor...")
 feature_extractor_load_start = time.time()
-feature_extractor = DPTImageProcessor.from_pretrained("Intel/dpt-hybrid-midas")
+feature_extractor = DPTImageProcessor.from_pretrained(
+    "Intel/dpt-hybrid-midas",
+    cache_dir=cache_dir,
+    torch_dtype=torch_dtype,
+)
 feature_extractor_load_time = time.time() - feature_extractor_load_start
 logger.info(f"Depth feature extractor loading took {feature_extractor_load_time:.4f} seconds")
 
