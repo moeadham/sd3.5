@@ -19,7 +19,7 @@ os.environ["HF_DATASETS_CACHE"] = "datasets"
 cache_dir = "./cache"
 
 prompt = "studio ghibli style"
-negative_prompt = "low quality, bad quality, sketches"
+negative_prompt = "blurry, incomplete"
 
 # download an image
 image = load_image(
@@ -27,7 +27,7 @@ image = load_image(
 )
 
 # initialize the models and pipeline
-controlnet_conditioning_scale = 0.85  # recommended for good generalization
+controlnet_conditioning_scale = 0.5  # recommended for good generalization
 controlnet = ControlNetModel.from_pretrained(
     "diffusers/controlnet-canny-sdxl-1.0", torch_dtype=torch.float16, cache_dir=cache_dir
 )
@@ -51,6 +51,6 @@ canny_image = Image.fromarray(image)
 canny_image.save("outputs/diffusers/sdxl_diffusers_canny.png")
 # generate image
 image = pipe(
-    prompt, controlnet_conditioning_scale=controlnet_conditioning_scale, image=canny_image
+    prompt, negative_prompt=negative_prompt, controlnet_conditioning_scale=controlnet_conditioning_scale, image=canny_image
 ).images[0]
 image.save("outputs/diffusers/sdxl_diffusers_output.png")
